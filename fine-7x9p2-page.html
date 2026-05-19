@@ -955,87 +955,68 @@ const parseAmount = (val) => {
 // VRAIE SYNCHRONISATION LIVE (100% des variables)
 // ════════════════════════════════════════════════
 async function doSync() {
-  document.getElementById('slabel').textContent = 'Synchronisation totale...';
+  document.getElementById('slabel').textContent = 'Sync...';
   
+  // Fonction interne pour trouver la colonne peu importe les espaces
+  const getVal = (row, key) => {
+    const k = Object.keys(row).find(x => x.trim().toUpperCase() === key.toUpperCase());
+    return parseAmount(row[k]);
+  };
+
   try {
-    const rNEX = await fetch(NEX_API);
+    const [rNEX, rPROC] = await Promise.all([fetch(NEX_API), fetch(PROC_API)]);
     const jNEX = await rNEX.json();
-    
-    const rPROC = await fetch(PROC_API);
     const jPROC = await rPROC.json();
 
-    // 1. TRAITEMENT NEX (Sommation par nom pour éviter les doublons)
+    // 1. TRAITEMENT NEX (Sommation par Sté)
     if (jNEX.status === "success" && jNEX.sheetData) {
-      let gmv = 0, bkgs = 0, totalDays = 0;
-      let cities = {}, partners = {}, sources = {}, models = {};
-
+      let partners = {};
       jNEX.sheetData.forEach(row => {
-        const amount = parseAmount(row['MONTANT TOTAL']);
-        const days = parseInt(row['NBRE. J/M']) || 0;
-        const pName = row['Sté'] || 'Inconnu';
-
-        if (amount > 0) {
-          gmv += amount;
-          bkgs++;
-          totalDays += days;
-
-          // Sommation des données si le nom du partenaire existe déjà
-          if (!partners[pName]) {
-            partners[pName] = {name: pName, cars: 0, total_days: 0, gmv: 0};
-          }
-          partners[pName].gmv += amount;
-          partners[pName].total_days += days;
+        const amt = getVal(row, 'MONTANT TOTAL');
+        const pName = (row['Sté'] || 'Inconnu').trim();
+        if (amt > 0) {
+          if (!partners[pName]) partners[pName] = {name: pName, cars: 0, total_days: 0, gmv: 0};
+          partners[pName].gmv += amt;
+          partners[pName].total_days += (parseInt(row['NBRE. J/M']) || 0);
           partners[pName].cars += 1;
         }
       });
-
-      NEX_GMV = gmv;
       NX_PARTNERS = Object.values(partners).sort((a,b) => b.gmv - a.gmv);
     }
 
-    // 2. TRAITEMENT PROCAB (Synchronisation TOTALE)
+    // 2. TRAITEMENT PROCAB (Sommation Totale)
     if (jPROC.status === "success" && jPROC.sheetData) {
       let prByMonth = {};
-      
       jPROC.sheetData.forEach(row => {
         const dateStr = row['DATE'];
         if (!dateStr) return;
-        
-        const parts = dateStr.split('/');
-        const monthKey = parts[1] + '/' + parts[2].substring(2); 
+        const monthKey = dateStr.split('/')[1] + '/' + dateStr.split('/')[2].substring(2);
 
         if (!prByMonth[monthKey]) {
            prByMonth[monthKey] = {m: monthKey, ca: 0, net: 0, rent: 0, sal: 0, yango: 0, opex: 0, ins: 0};
         }
 
-        // Sommation de toutes les colonnes métier
-        prByMonth[monthKey].ca += parseAmount(row['REVENU PROCAB BRUT (REVENU PROCAB + RESTE PROCAB)']);
-        prByMonth[monthKey].rent += parseAmount(row['LOYER']);
-        prByMonth[monthKey].sal += parseAmount(row['SALAIRE NET (BONUS + CONPENSATION 25 MAD)']);
-        prByMonth[monthKey].yango += parseAmount(row['REVENU | CARTE']);
-        prByMonth[monthKey].opex += parseAmount(row['OPEX']);
-        prByMonth[monthKey].ins += parseAmount(row['ASSURANCE']);
-        
-        // Calcul du net mensuel
+        prByMonth[monthKey].ca += getVal(row, 'REVENU PROCAB BRUT (REVENU PROCAB + RESTE PROCAB)');
+        prByMonth[monthKey].rent += getVal(row, 'LOYER');
+        prByMonth[monthKey].sal += getVal(row, 'SALAIRE NET (BONUS + CONPENSATION 25 MAD)');
+        prByMonth[monthKey].yango += getVal(row, 'REVENU | CARTE');
+        prByMonth[monthKey].opex += getVal(row, 'OPEX');
+        prByMonth[monthKey].ins += getVal(row, 'ASSURANCE');
         prByMonth[monthKey].net = prByMonth[monthKey].ca - (prByMonth[monthKey].rent + prByMonth[monthKey].sal + prByMonth[monthKey].opex + prByMonth[monthKey].ins);
       });
-
       PR = Object.values(prByMonth);
-      PR_CA_TOTAL = PR.reduce((s, r) => s + r.ca, 0);
     }
 
-    // 3. RAFRAICHISSEMENT UI
-    // Note : On retire renderGr() ici pour garder le graphique "Roadmap" statique
+    // 3. MISE À JOUR VISUELLE (Sauf Roadmap)
     Object.values(CH).forEach(chart => { if(chart) chart.destroy(); });
     renderOv();
     if(rendered.nex) renderNex();
     if(rendered.occ) renderOcc();
     if(rendered.pr) renderPr();
 
-    document.getElementById('sdot').className = 'sdot live';
-    document.getElementById('slabel').textContent = 'Sync terminée';
+    document.getElementById('slabel').textContent = 'Sync OK';
   } catch(e) {
-    document.getElementById('slabel').textContent = 'Erreur de Sync';
+    document.getElementById('slabel').textContent = 'Erreur Sync';
     console.error(e);
   }
 }
