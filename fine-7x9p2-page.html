@@ -955,7 +955,8 @@ const parseAmount = (val) => {
 // VRAIE SYNCHRONISATION LIVE (100% des variables)
 // ════════════════════════════════════════════════
 async function doSync() {
-  document.getElementById('slabel').textContent = 'Synchronisation en cours...';
+  document.getElementById('slabel').textContent = 'Synchronisation totale...';
+  
   try {
     const rNEX = await fetch(NEX_API);
     const jNEX = await rNEX.json();
@@ -963,145 +964,79 @@ async function doSync() {
     const rPROC = await fetch(PROC_API);
     const jPROC = await rPROC.json();
 
-    const mNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-    // --- 1. TRAITEMENT NEX ---
+    // 1. TRAITEMENT NEX (Sommation par nom pour éviter les doublons)
     if (jNEX.status === "success" && jNEX.sheetData) {
       let gmv = 0, bkgs = 0, totalDays = 0;
-      let cities = {}, partners = {}, sources = {}, models = {}, nexMoDict = {};
+      let cities = {}, partners = {}, sources = {}, models = {};
 
       jNEX.sheetData.forEach(row => {
         const amount = parseAmount(row['MONTANT TOTAL']);
         const days = parseInt(row['NBRE. J/M']) || 0;
-        const source = row['SOURCE BOOKING'];
-        const city = row['Ville départ'] || 'Inconnu';
-        const partner = row['Sté'] || 'Inconnu';
-        const model = row['MODELE'] || 'Inconnu';
-        const dateDep = row['DATE DEPART'];
+        const pName = row['Sté'] || 'Inconnu';
 
         if (amount > 0) {
           gmv += amount;
           bkgs++;
           totalDays += days;
 
-          // Groupement par Ville, Partenaire, Source, Modèle
-          if(city) { cities[city] = cities[city] || {gmv: 0, cnt: 0}; cities[city].gmv += amount; cities[city].cnt++; }
-          if(partner) { partners[partner] = partners[partner] || {name: partner, cars: 0, total_days: 0, gmv: 0}; partners[partner].gmv += amount; partners[partner].total_days += days; partners[partner].cars++; }
-          if(source) { sources[source] = sources[source] || {name: source, cars: 0, total_days: 0, gmv: 0}; sources[source].gmv += amount; sources[source].total_days += days; sources[source].cars++; }
-          if(model) { models[model] = models[model] || {name: model, cnt: 0, days: 0, gmv: 0}; models[model].cnt++; models[model].days += days; models[model].gmv += amount; }
-
-          // Groupement par Mois (NEX_MO) - Crucial pour les graphiques mensuels !
-          if (dateDep) {
-             const dParts = dateDep.split('/');
-             if (dParts.length >= 3) {
-                const mIdx = parseInt(dParts[1]) - 1;
-                const yr = dParts[2].substring(2, 4);
-                if (mIdx >= 0 && mIdx < 12) {
-                   const mKey = mNames[mIdx] + ' ' + yr;
-                   nexMoDict[mKey] = nexMoDict[mKey] || {m: mKey, gmv: 0, cnt: 0};
-                   nexMoDict[mKey].gmv += amount;
-                   nexMoDict[mKey].cnt++;
-                }
-             }
+          // Sommation des données si le nom du partenaire existe déjà
+          if (!partners[pName]) {
+            partners[pName] = {name: pName, cars: 0, total_days: 0, gmv: 0};
           }
+          partners[pName].gmv += amount;
+          partners[pName].total_days += days;
+          partners[pName].cars += 1;
         }
       });
 
-      // Remplacement global NEX
       NEX_GMV = gmv;
-      NEX_BKGS = bkgs;
-      NEX_AVG_BV = bkgs > 0 ? gmv / bkgs : 0;
-      NEX_AVG_DUR = bkgs > 0 ? +(totalDays / bkgs).toFixed(1) : 0;
-      NEX_MO = Object.values(nexMoDict); // <== C'était ça qui manquait pour NEX !
-      NX_CITIES = cities;
-      NX_PARTNERS = Object.values(partners).sort((a,b)=>b.gmv - a.gmv);
-      NX_SOURCES = Object.values(sources).sort((a,b)=>b.gmv - a.gmv);
-      NX_MODELS = Object.values(models).sort((a,b)=>b.gmv - a.gmv);
-      
-      TOTAL_CARS_DEPLOYED = NX_PARTNERS.reduce((s,p)=>s+p.cars,0);
-      TOTAL_DAYS_GENERATED = NX_PARTNERS.reduce((s,p)=>s+p.total_days,0);
+      NX_PARTNERS = Object.values(partners).sort((a,b) => b.gmv - a.gmv);
     }
 
-    // --- 2. TRAITEMENT PROCAB ---
+    // 2. TRAITEMENT PROCAB (Synchronisation TOTALE)
     if (jPROC.status === "success" && jPROC.sheetData) {
       let prByMonth = {};
-      let cumul = 0;
       
       jPROC.sheetData.forEach(row => {
         const dateStr = row['DATE'];
         if (!dateStr) return;
         
         const parts = dateStr.split('/');
-        if(parts.length < 3) return;
-        
-        const mIdx = parseInt(parts[1]) - 1;
-        const yr = parts[2].substring(2, 4);
-        if (mIdx < 0 || mIdx >= 12) return;
-        const monthKey = mNames[mIdx] + ' ' + yr;
-
-        const revenuBrut = parseAmount(row['REVENU PROCAB BRUT (REVENU PROCAB + RESTE PROCAB)']);
-        const loyer = parseAmount(row['LOYER']);
-        const salaire = parseAmount(row['SALAIRE NET (BONUS + CONPENSATION 25 MAD)']);
-        const yangoRev = parseAmount(row['REVENU | CARTE']); // On associe Carte à Yango/App
+        const monthKey = parts[1] + '/' + parts[2].substring(2); 
 
         if (!prByMonth[monthKey]) {
-           prByMonth[monthKey] = {m: monthKey, ca: 0, net: 0, cumnet: 0, tresor: 0, sal: 0, opex: 0, ins: 0, rent: 0, yango: 0, cash: 0, mom: null};
+           prByMonth[monthKey] = {m: monthKey, ca: 0, net: 0, rent: 0, sal: 0, yango: 0, opex: 0, ins: 0};
         }
 
-        prByMonth[monthKey].ca += revenuBrut;
-        prByMonth[monthKey].rent += loyer;
-        prByMonth[monthKey].sal += salaire;
-        prByMonth[monthKey].yango += yangoRev; // <== C'était ça qui manquait pour PROCAB !
+        // Sommation de toutes les colonnes métier
+        prByMonth[monthKey].ca += parseAmount(row['REVENU PROCAB BRUT (REVENU PROCAB + RESTE PROCAB)']);
+        prByMonth[monthKey].rent += parseAmount(row['LOYER']);
+        prByMonth[monthKey].sal += parseAmount(row['SALAIRE NET (BONUS + CONPENSATION 25 MAD)']);
+        prByMonth[monthKey].yango += parseAmount(row['REVENU | CARTE']);
+        prByMonth[monthKey].opex += parseAmount(row['OPEX']);
+        prByMonth[monthKey].ins += parseAmount(row['ASSURANCE']);
         
-        // Net mensuel = CA brut - Loyer - Salaire
-        prByMonth[monthKey].net += (revenuBrut - loyer - salaire);
+        // Calcul du net mensuel
+        prByMonth[monthKey].net = prByMonth[monthKey].ca - (prByMonth[monthKey].rent + prByMonth[monthKey].sal + prByMonth[monthKey].opex + prByMonth[monthKey].ins);
       });
 
-      let prArray = Object.values(prByMonth);
-      
-      // Calcul du Cumul et MoM (Month over Month)
-      for (let i = 0; i < prArray.length; i++) {
-         cumul += prArray[i].net;
-         prArray[i].cumnet = cumul;
-         prArray[i].tresor = cumul; // Trésorerie liée au cumul net
-         
-         if (i > 0 && prArray[i-1].ca > 0) {
-            prArray[i].mom = +(((prArray[i].ca - prArray[i-1].ca) / prArray[i-1].ca) * 100).toFixed(2);
-         }
-      }
-
-      // Remplacement global PROCAB
-      PR = prArray;
-      if (PR.length > 0) {
-        PR_CA_TOTAL = PR.reduce((s,r)=>s+r.ca,0);
-        PR_RENT_TOTAL = PR.reduce((s,r)=>s+r.rent,0);
-        PR_SAL_TOTAL = PR.reduce((s,r)=>s+r.sal,0);
-        PR_YANGO_TOTAL = PR.reduce((s,r)=>s+r.yango,0); 
-        PR_NET_CUMUL = PR.reduce((s,r)=>s+r.net,0);
-        PR_PEAK = PR.reduce((a,b)=>a.ca>b.ca?a:b);
-        PR_NET_FINAL_TRESOR = PR_NET_CUMUL;
-      }
-      COMBINED_GMV = NEX_GMV + PR_CA_TOTAL;
+      PR = Object.values(prByMonth);
+      PR_CA_TOTAL = PR.reduce((s, r) => s + r.ca, 0);
     }
 
-    // --- 3. RAFRAICHISSEMENT VISUEL COMPLET ---
+    // 3. RAFRAICHISSEMENT UI
+    // Note : On retire renderGr() ici pour garder le graphique "Roadmap" statique
     Object.values(CH).forEach(chart => { if(chart) chart.destroy(); });
-    
     renderOv();
     if(rendered.nex) renderNex();
     if(rendered.occ) renderOcc();
     if(rendered.pr) renderPr();
-    if(rendered.gr) renderGr();
 
-    document.getElementById('sdot').className='sdot live';
-    document.getElementById('slabel').textContent='Live · '+new Date().toLocaleTimeString();
-    document.getElementById('livetag').textContent='LIVE';
-    document.getElementById('livetag').className='badge b-green';
-
+    document.getElementById('sdot').className = 'sdot live';
+    document.getElementById('slabel').textContent = 'Sync terminée';
   } catch(e) {
-    console.error("Erreur détaillée:", e);
-    document.getElementById('sdot').className='sdot';
-    document.getElementById('slabel').textContent='Erreur de Sync (F12)';
+    document.getElementById('slabel').textContent = 'Erreur de Sync';
+    console.error(e);
   }
 }
   
