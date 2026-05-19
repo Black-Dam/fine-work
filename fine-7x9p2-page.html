@@ -418,8 +418,8 @@ tr:hover td{background:var(--bg2);color:var(--text)}
 // ════════════════════════════════════════════════
 // LIVE SYNC APIS
 // ════════════════════════════════════════════════
-let NEX_API  = 'https://script.google.com/macros/s/AKfycby66jn9egMGulKauJN7WEwSxDLGAvgD1JAVPNUmEVoLh0ePJ8tP39R1WKAjXIwVg9n2/exec';
-let PROC_API = 'https://script.google.com/macros/s/AKfycbzym_FHE2wT0hdIc3pjBTIkcbAvyvYzdxbdifKKYIcO3jUCdIAJChVSy6Wth_hPzkXE/exec';
+const NEX_API  = 'https://script.google.com/macros/s/AKfycby66jn9egMGulKauJN7WEwSxDLGAvgD1JAVPNUmEVoLh0ePJ8tP39R1WKAjXIwVg9n2/exec';
+const PROC_API = 'https://script.google.com/macros/s/AKfycbzym_FHE2wT0hdIc3pjBTIkcbAvyvYzdxbdifKKYIcO3jUCdIAJChVSy6Wth_hPzkXE/exec';
 
 // ════════════════════════════════════════════════
 // VERIFIED PROCAB DATA — from Compte de Résultat
@@ -945,44 +945,32 @@ function nav(id,btn){
 }
 
 // ════════════════════════════════════════════════
-// LIVE SYNC
-// ════════════════════════════════════════════════
-// ════════════════════════════════════════════════
 // VRAIE SYNCHRONISATION LIVE
 // ════════════════════════════════════════════════
 async function doSync(){
-  document.getElementById('slabel').textContent='Synchronisation en cours...';
+  document.getElementById('slabel').textContent='Synchronisation...';
   try{
-    // Appel vers la base de données NEX (et tu peux ajouter PROCAB de la même façon)
-    let r = await fetch(NEX_API, {mode:'cors'});
-    let j = await r.json();
+    // Synchronisation NEX
+    const rNEX = await fetch(NEX_API);
+    const jNEX = await rNEX.json();
     
-    // Si la requête renvoie des vraies données depuis l'Apps Script
-    if (j.status === "success" && j.sheetData) {
-      
-      console.log("Données reçues :", j.sheetData);
-      
-      // EXEMPLE DE SYNCHRONISATION (Tu dois lier ça à tes colonnes Google Sheets exactes)
-      // NEX_GMV = j.sheetData[0].Total_GMV_Column; 
-      
-      // Détruit les anciens graphiques
-      Object.values(CH).forEach(chart => { if(chart) chart.destroy(); });
-      
-      // Redessine l'interface avec les nouvelles variables
-      renderOv(); 
-      if (document.getElementById('tab-proc').classList.contains('on')) renderProc();
-      
-      document.getElementById('sdot').className='sdot live';
-      document.getElementById('slabel').textContent='Live · '+new Date().toLocaleTimeString();
-      document.getElementById('livetag').textContent='LIVE';
-      document.getElementById('livetag').className='badge b-green';
-    } else {
-      throw new Error("Pas de données valides reçues");
-    }
+    // Synchronisation PROCAB
+    const rPROC = await fetch(PROC_API);
+    const jPROC = await rPROC.json();
+    
+    // Si tu atteins cette ligne, les deux ont réussi
+    console.log("NEX:", jNEX);
+    console.log("PROC:", jPROC);
+
+    document.getElementById('sdot').className='sdot live';
+    document.getElementById('slabel').textContent='Live · '+new Date().toLocaleTimeString();
+    document.getElementById('livetag').textContent='LIVE';
+    document.getElementById('livetag').className='badge b-green';
+    
   }catch(e){
-    console.error("Erreur de Sync: ", e);
+    console.error("Erreur Sync:", e);
     document.getElementById('sdot').className='sdot';
-    document.getElementById('slabel').textContent='Échec de connexion (Voir Console)';
+    document.getElementById('slabel').textContent='Erreur de sync';
   }
 }
   
