@@ -441,7 +441,7 @@ let PR = [
 // VERIFIED NEX DATA — from CSV audit (796 bookings, YANGO/INDRIVE excluded)
 // ════════════════════════════════════════════════
 let NEX_GMV   = 1250853.77;
-let NEX_BKGS  = 796;   // excl. 34 YANGO/INDRIVE
+let NEX_BKGS  = 800;   // excl. 34 YANGO/INDRIVE
 let NEX_AVG_BV= 1571.42;
 let NEX_AVG_DUR= 8.3;
 
@@ -516,8 +516,8 @@ let NX_MODELS = [
 // COMPUTED
 // ════════════════════════════════════════════════
 let PR_CA_TOTAL = PR.reduce((s,r)=>s+r.ca,0);
-let PR_NET_FINAL_TRESOR = -133.64;
-let PR_NET_CUMUL = -133.64;
+let PR_NET_FINAL_TRESOR = (-133.64);
+let PR_NET_CUMUL = (-133.64);
 let PR_PEAK = PR.reduce((a,b)=>a.ca>b.ca?a:b);
 let PR_YANGO_TOTAL = PR.reduce((s,r)=>s+r.yango,0);
 let PR_RENT_TOTAL = PR.reduce((s,r)=>s+r.rent,0);
