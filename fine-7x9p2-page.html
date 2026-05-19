@@ -947,24 +947,49 @@ function nav(id,btn){
 // ════════════════════════════════════════════════
 // LIVE SYNC
 // ════════════════════════════════════════════════
+// ════════════════════════════════════════════════
+// VRAIE SYNCHRONISATION LIVE
+// ════════════════════════════════════════════════
 async function doSync(){
-  document.getElementById('slabel').textContent='Connecting…';
+  document.getElementById('slabel').textContent='Synchronisation en cours...';
   try{
-    const r=await fetch(NEX_API+'?action=list',{mode:'cors'});
-    const j=await r.json();
-    document.getElementById('sdot').className='sdot live';
-    document.getElementById('slabel').textContent='Live · '+new Date().toLocaleTimeString();
-    document.getElementById('livetag').textContent='LIVE';
-    document.getElementById('livetag').className='badge b-green';
+    // Appel vers la base de données NEX (et tu peux ajouter PROCAB de la même façon)
+    const r = await fetch(NEX_API, {mode:'cors'});
+    const j = await r.json();
+    
+    // Si la requête renvoie des vraies données depuis l'Apps Script
+    if (j.status === "success" && j.sheetData) {
+      
+      console.log("Données reçues :", j.sheetData);
+      
+      // EXEMPLE DE SYNCHRONISATION (Tu dois lier ça à tes colonnes Google Sheets exactes)
+      // NEX_GMV = j.sheetData[0].Total_GMV_Column; 
+      
+      // Détruit les anciens graphiques
+      Object.values(CH).forEach(chart => { if(chart) chart.destroy(); });
+      
+      // Redessine l'interface avec les nouvelles variables
+      renderOv(); 
+      if (document.getElementById('tab-proc').classList.contains('on')) renderProc();
+      
+      document.getElementById('sdot').className='sdot live';
+      document.getElementById('slabel').textContent='Live · '+new Date().toLocaleTimeString();
+      document.getElementById('livetag').textContent='LIVE';
+      document.getElementById('livetag').className='badge b-green';
+    } else {
+      throw new Error("Pas de données valides reçues");
+    }
   }catch(e){
+    console.error("Erreur de Sync: ", e);
     document.getElementById('sdot').className='sdot';
-    document.getElementById('slabel').textContent='Open in browser to sync';
+    document.getElementById('slabel').textContent='Échec de connexion (Voir Console)';
   }
 }
-
+  
 // ════════════════════════════════════════════════
 // CSV EXPORT
 // ════════════════════════════════════════════════
+
 function exportCSV(){
   const rows=[['=== PROCAB P&L ==='],['Month','CA','Net Mensuel','Net Cumulé','Trésorerie','Loyer','Salaires','Yango']];
   PR.forEach(r=>rows.push([r.m,r.ca,r.net,r.cumnet,r.tresor,r.rent,r.sal,r.yango]));
