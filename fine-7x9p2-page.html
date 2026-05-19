@@ -639,28 +639,7 @@ function renderNex(){
   mkBar('c-nx4',ck2,[{data:ck2.map(k=>Math.round(NX_CITIES[k].gmv/NX_CITIES[k].cnt)),backgroundColor:CLRS}]);
   leg('l-nx4',ck2.map((k,i)=>({c:CLRS[i],l:k})));
 
-  let topBkgs=[
-    {src:'ACA RENT RAK',model:'SANDERO',city:'RAK',days:39,amt:10930.75,partner:'IZI LEASE'},
-    {src:'ACA RENT RAK',model:'JOGGER', city:'RAK',days:11,amt:7220.18,partner:'IZI LEASE'},
-    {src:'ZEZGO RAK',   model:'LOGAN',  city:'RAK',days:26,amt:8116.66,partner:'MOBILITYLINE'},
-    {src:'ZEZGO RAK',   model:'LOGAN',  city:'RAK',days:28,amt:7536.70,partner:'MOBILITYLINE'},
-    {src:'ACA RENT RAK',model:'CLIO 5', city:'RAK',days:21,amt:6446.79,partner:'IZI LEASE'},
-    {src:'ACA RENT RAK',model:'SANDERO',city:'RAK',days:21,amt:5885.79,partner:'IZI LEASE'},
-    {src:'ZEZGO CASA',  model:'LOGAN',  city:'CASA',days:25,amt:5610.00,partner:'MOBILITYLINE'},
-    {src:'ZEZGO RAK',   model:'LOGAN',  city:'RAK',days:21,amt:5458.75,partner:'MOBILITYLINE'},
-    {src:'ACA RENT RAK',model:'SANDERO',city:'RAK',days:39,amt:10930.75,partner:'IZI LEASE'},
-    {src:'FLEXWAYS CASA',model:'LOGAN', city:'CASA',days:21,amt:4983.47,partner:'MOBILITYLINE'},
-    {src:'ZEZGO RAK',   model:'STEPWAY',city:'RAK',days:20,amt:4822.36,partner:'MOBILITYLINE'},
-    {src:'ZEZGO CASA',  model:'LOGAN',  city:'CASA',days:14,amt:4684.68,partner:'MOBILITYLINE'},
-    {src:'ZEZGO CASA',  model:'LOGAN',  city:'CASA',days:17,amt:3814.80,partner:'MOBILITYLINE'},
-    {src:'ZEZGO RAK',   model:'STEPWAY',city:'RAK',days:10,amt:3813.68,partner:'MOBILITYLINE'},
-    {src:'ZEZGO CASA',  model:'SANDERO',city:'CASA',days:15,amt:3534.30,partner:'MOBILITYLINE'},
-    {src:'ZEZGO RAK',   model:'SANDERO',city:'RAK',days:28,amt:3769.92,partner:'IZI LEASE'},
-    {src:'ZEZGO CASA',  model:'LOGAN',  city:'CASA',days:16,amt:4005.54,partner:'MOBILITYLINE'},
-    {src:'ZEZGO RAK',   model:'SANDERO',city:'RAK',days:14,amt:3287.46,partner:'IZI LEASE'},
-    {src:'ACA RENT RAK',model:'SANDERO',city:'RAK',days:13,amt:3643.58,partner:'IZI LEASE'},
-    {src:'ZEZGO RAK',   model:'LOGAN',  city:'RAK',days:16,amt:3612.84,partner:'IZI LEASE'},
-  ].filter((v,i,a)=>a.findIndex(x=>x.src===v.src&&x.amt===v.amt)===i).sort((a,b)=>b.amt-a.amt).slice(0,15);
+  let topBkgs=[].filter((v,i,a)=>a.findIndex(x=>x.src===v.src&&x.amt===v.amt)===i).sort((a,b)=>b.amt-a.amt).slice(0,15);
 
   document.getElementById('t-nex').innerHTML=
     '<thead><tr><th>Source</th><th>Model</th><th>City</th><th>Days</th><th>Amount (MAD)</th><th>Partner</th><th>Rev/Day</th></tr></thead><tbody>'+
