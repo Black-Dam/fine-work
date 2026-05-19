@@ -944,33 +944,117 @@ function nav(id,btn){
   if(!rendered[id]){rendered[id]=true;TABS[id].fn&&TABS[id].fn();}
 }
 
+// Outil pour nettoyer les montants (ex: "dh3 287,46" -> 3287.46)
+const parseAmount = (val) => {
+  if (!val) return 0;
+  if (typeof val === 'number') return val;
+  return parseFloat(val.toString().replace(/[^0-9,-]/g, '').replace(',', '.')) || 0;
+};
+
 // ════════════════════════════════════════════════
 // VRAIE SYNCHRONISATION LIVE
 // ════════════════════════════════════════════════
-async function doSync(){
-  document.getElementById('slabel').textContent='Synchronisation...';
-  try{
-    // Synchronisation NEX
+async function doSync() {
+  document.getElementById('slabel').textContent = 'Synchronisation en cours...';
+  try {
+    // 1. Appel aux deux bases de données
     const rNEX = await fetch(NEX_API);
     const jNEX = await rNEX.json();
     
-    // Synchronisation PROCAB
     const rPROC = await fetch(PROC_API);
     const jPROC = await rPROC.json();
+
+    // 2. TRAITEMENT NEX (Via 'DATA TABLE')
+    if (jNEX.status === "success" && jNEX.sheetData) {
+      let gmv = 0, bkgs = 0, totalDays = 0;
+      let cities = {}, partners = {}, sources = {}, models = {};
+
+      jNEX.sheetData.forEach(row => {
+        const amount = parseAmount(row['MONTANT TOTAL']);
+        const days = parseInt(row['NBRE. J/M']) || 0;
+        const source = row['SOURCE BOOKING'];
+        const city = row['Ville départ'];
+        const partner = row['Sté'];
+        const model = row['MODELE'];
+
+        if (amount > 0) {
+          gmv += amount;
+          bkgs++;
+          totalDays += days;
+
+          if(city) { cities[city] = cities[city] || {gmv: 0, cnt: 0}; cities[city].gmv += amount; cities[city].cnt++; }
+          if(partner) { partners[partner] = partners[partner] || {name: partner, cars: 0, total_days: 0, gmv: 0}; partners[partner].gmv += amount; partners[partner].total_days += days; partners[partner].cars++; }
+          if(source) { sources[source] = sources[source] || {name: source, cars: 0, total_days: 0, gmv: 0}; sources[source].gmv += amount; sources[source].total_days += days; sources[source].cars++; }
+          if(model) { models[model] = models[model] || {name: model, cnt: 0, days: 0, gmv: 0}; models[model].cnt++; models[model].days += days; models[model].gmv += amount; }
+        }
+      });
+
+      // Écrasement des variables globales NEX
+      NEX_GMV = gmv;
+      NEX_BKGS = bkgs;
+      NEX_AVG_BV = bkgs > 0 ? gmv / bkgs : 0;
+      NEX_AVG_DUR = bkgs > 0 ? +(totalDays / bkgs).toFixed(1) : 0;
+      NX_CITIES = cities;
+      NX_PARTNERS = Object.values(partners).sort((a,b)=>b.gmv - a.gmv);
+      NX_SOURCES = Object.values(sources).sort((a,b)=>b.gmv - a.gmv);
+      NX_MODELS = Object.values(models).sort((a,b)=>b.gmv - a.gmv);
+      
+      TOTAL_CARS_DEPLOYED = NX_PARTNERS.reduce((s,p)=>s+p.cars,0);
+      TOTAL_DAYS_GENERATED = NX_PARTNERS.reduce((s,p)=>s+p.total_days,0);
+    }
+
+    // 3. TRAITEMENT PROCAB (Via 'MASTER_DATA')
+    if (jPROC.status === "success" && jPROC.sheetData) {
+      let prByMonth = {};
+      
+      jPROC.sheetData.forEach(row => {
+        const dateStr = row['DATE'];
+        if (!dateStr) return;
+        
+        // Extraction basique du mois pour regrouper les revenus (ex: "05/26")
+        const parts = dateStr.split('/');
+        if(parts.length < 3) return;
+        const monthKey = parts[1] + '/' + parts[2].substring(2); 
+
+        const revenuBrut = parseAmount(row['REVENU PROCAB BRUT (REVENU PROCAB + RESTE PROCAB)']);
+        const loyer = parseAmount(row['LOYER']);
+        const salaire = parseAmount(row['SALAIRE NET (BONUS + CONPENSATION 25 MAD)']);
+
+        if (!prByMonth[monthKey]) {
+           prByMonth[monthKey] = {m: monthKey, ca: 0, net: 0, cumnet: 0, tresor: 0, sal: 0, opex: 0, ins: 0, rent: 0, yango: 0, cash: 0, mom: null};
+        }
+
+        prByMonth[monthKey].ca += revenuBrut;
+        prByMonth[monthKey].rent += loyer;
+        prByMonth[monthKey].sal += salaire;
+        prByMonth[monthKey].net += (revenuBrut - loyer - salaire);
+      });
+
+      // Écrasement des variables globales PROCAB
+      PR = Object.values(prByMonth);
+      PR_CA_TOTAL = PR.reduce((s,r)=>s+r.ca,0);
+      COMBINED_GMV = NEX_GMV + PR_CA_TOTAL;
+    }
+
+    // 4. RAFRAICHISSEMENT VISUEL COMPLET
+    Object.values(CH).forEach(chart => { if(chart) chart.destroy(); }); // Efface les anciens graphiques
     
-    // Si tu atteins cette ligne, les deux ont réussi
-    console.log("NEX:", jNEX);
-    console.log("PROC:", jPROC);
+    // Redessine l'écran selon les nouvelles données
+    renderOv();
+    if(rendered.nex) renderNex();
+    if(rendered.occ) renderOcc();
+    if(rendered.pr) renderPr();
+    if(rendered.gr) renderGr();
 
     document.getElementById('sdot').className='sdot live';
     document.getElementById('slabel').textContent='Live · '+new Date().toLocaleTimeString();
     document.getElementById('livetag').textContent='LIVE';
     document.getElementById('livetag').className='badge b-green';
-    
-  }catch(e){
-    console.error("Erreur Sync:", e);
+
+  } catch(e) {
+    console.error("Erreur détaillée:", e);
     document.getElementById('sdot').className='sdot';
-    document.getElementById('slabel').textContent='Erreur de sync';
+    document.getElementById('slabel').textContent='Erreur (F12 pour détails)';
   }
 }
   
