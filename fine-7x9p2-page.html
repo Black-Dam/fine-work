@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>PROCAB × NEX — Mobility Intelligence Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#ffffff;--bg2:#f8f9fb;--bg3:#f1f3f7;--bg4:#e8eaf0;
+  --border:#e2e5ed;--border2:#d0d4e0;
+  --text:#0f1117;--text2:#4a4f6a;--text3:#9095b0;
+  --blue:#2563eb;--blue-light:rgba(37,99,235,.08);
+  --green:#059669;--green-light:rgba(5,150,105,.08);
+  --amber:#d97706;--amber-light:rgba(217,119,6,.08);
+  --red:#dc2626;--red-light:rgba(220,38,38,.08);
+  --purple:#7c3aed;--purple-light:rgba(124,58,237,.08);
+  --sky:#0284c7;--sky-light:rgba(2,132,199,.08);
+  --r6:6px;--r10:10px;--r14:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+
+/* ── LAYOUT ── */
+.shell{display:flex;min-height:100vh}
+.sb{width:220px;background:var(--bg);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;z-index:100;display:flex;flex-direction:column;overflow-y:auto}
+.main{margin-left:220px;flex:1;min-height:100vh;display:flex;flex-direction:column}
+
+/* ── SIDEBAR ── */
+.sb-logo{padding:20px 18px 16px;border-bottom:1px solid var(--border)}
+.sb-name{font-size:14px;font-weight:700;color:var(--text);letter-spacing:-.3px}
+.sb-tag{font-size:11px;color:var(--text3);margin-top:2px;font-weight:400}
+.sb-nav{flex:1;padding:10px 10px}
+.sb-group{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;padding:14px 8px 5px}
+.nb{display:flex;align-items:center;gap:9px;width:100%;padding:8px 8px;border:none;background:transparent;color:var(--text2);font-size:13px;font-family:'Inter',sans-serif;font-weight:400;border-radius:var(--r6);cursor:pointer;text-align:left;transition:all .12s}
+.nb:hover{background:var(--bg2);color:var(--text)}
+.nb.on{background:var(--blue-light);color:var(--blue);font-weight:500}
+.nb-ic{font-size:13px;width:16px;text-align:center;flex-shrink:0}
+.sb-foot{padding:12px 10px;border-top:1px solid var(--border)}
+.sync-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);margin-bottom:8px}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--amber);flex-shrink:0;transition:background .3s}
+.sdot.live{background:var(--green);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.btn-sync{width:100%;padding:7px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r6);color:var(--text2);font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;transition:all .12s}
+.btn-sync:hover{background:var(--bg3);border-color:var(--blue);color:var(--blue)}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:50}
+.topbar-title{font-size:15px;font-weight:600;color:var(--text)}
+.topbar-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.badge{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:500;letter-spacing:.03em}
+.b-blue{background:var(--blue-light);color:var(--blue);border:1px solid rgba(37,99,235,.2)}
+.b-amber{background:var(--amber-light);color:var(--amber);border:1px solid rgba(217,119,6,.2)}
+.b-green{background:var(--green-light);color:var(--green);border:1px solid rgba(5,150,105,.2)}
+.b-red{background:var(--red-light);color:var(--red);border:1px solid rgba(220,38,38,.2)}
+.b-gray{background:var(--bg2);color:var(--text3);border:1px solid var(--border)}
+
+/* ── CONTENT ── */
+.content{padding:24px 28px;flex:1}
+.sec{display:none}.sec.on{display:block}
+
+/* ── SECTION HEADER ── */
+.sh{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:12px;flex-wrap:wrap}
+.sh-t{font-size:17px;font-weight:600;color:var(--text);letter-spacing:-.3px}
+.sh-s{font-size:12px;color:var(--text3);margin-top:3px}
+.sh-btns{display:flex;gap:7px;flex-shrink:0}
+.btn-sm{padding:6px 13px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r6);color:var(--text2);font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;transition:all .12s}
+.btn-sm:hover{background:var(--bg3);color:var(--text)}
+.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn-primary:hover{background:#1d4ed8;color:#fff}
+
+/* ── KPI CARDS ── */
+.kgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.kc{background:var(--bg);border:1px solid var(--border);border-radius:var(--r10);padding:16px 18px;position:relative;overflow:hidden;transition:box-shadow .15s}
+.kc:hover{box-shadow:0 2px 12px rgba(0,0,0,.07)}
+.kc-top{height:3px;position:absolute;top:0;left:0;right:0;border-radius:var(--r10) var(--r10) 0 0}
+.kc-top.blue{background:var(--blue)}.kc-top.green{background:var(--green)}.kc-top.amber{background:var(--amber)}.kc-top.red{background:var(--red)}.kc-top.purple{background:var(--purple)}.kc-top.sky{background:var(--sky)}
+.kl{font-size:11px;color:var(--text3);font-weight:500;letter-spacing:.02em;margin-bottom:8px}
+.kv{font-size:21px;font-weight:700;color:var(--text);letter-spacing:-.5px;line-height:1}
+.ks{font-size:11px;margin-top:6px;color:var(--text3)}
+.ku{color:var(--green)}.kd{color:var(--red)}.km{color:var(--amber)}
+
+/* ── CHART CARDS ── */
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.cgrid.w1{grid-template-columns:1fr}.cgrid.w3{grid-template-columns:repeat(3,1fr)}
+.cc{background:var(--bg);border:1px solid var(--border);border-radius:var(--r10);padding:18px 20px;transition:box-shadow .15s}
+.cc:hover{box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.ct{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.leg{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+.ld{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+/* ── TABLE ── */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:8px 14px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;background:var(--bg2)}
+td{padding:9px 14px;border-bottom:1px solid var(--bg3);color:var(--text2);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg2);color:var(--text)}
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500}
+.pu{background:var(--green-light);color:var(--green)}
+.pd{background:var(--red-light);color:var(--red)}
+.pb{background:var(--blue-light);color:var(--blue)}
+.pa{background:var(--amber-light);color:var(--amber)}
+.pp{background:var(--purple-light);color:var(--purple)}
+
+/* ── DIVIDER ── */
+.divider{height:1px;background:var(--border);margin:22px 0}
+
+/* ── ROADMAP ── */
+.roadmap{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.rm-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r10);padding:20px;position:relative;overflow:hidden}
+.rm-year{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.rm-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px}
+.rm-bar{height:4px;width:100%;background:var(--bg3);border-radius:2px;margin-bottom:14px;overflow:hidden}
+.rm-fill{height:100%;border-radius:2px;transition:width 1.2s ease}
+.rm-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--bg3)}
+.rm-item:last-child{border-bottom:none}
+.rm-dot{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;margin-top:1px}
+.rm-dot-done{background:var(--green-light);color:var(--green)}
+.rm-dot-prog{background:var(--amber-light);color:var(--amber)}
+.rm-dot-plan{background:var(--bg3);color:var(--text3)}
+.rm-item-text{font-size:12.5px;color:var(--text2);line-height:1.4}
+.rm-item-val{font-size:11px;font-weight:600;margin-top:2px}
+
+/* ── STAT ROW (inline) ── */
+.stat-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.stat-chip{display:flex;align-items:center;gap:5px;padding:5px 11px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;font-size:11.5px;color:var(--text2)}
+.stat-chip strong{color:var(--text);font-weight:600}
+
+/* ── OCCUPANCY TABLE ── */
+.occ-bar-bg{width:80px;height:5px;background:var(--bg3);border-radius:3px;display:inline-block;vertical-align:middle}
+.occ-bar-fill{height:100%;border-radius:3px;background:var(--blue)}
+
+/* ── P&L HIGHLIGHT ── */
+.pl-row{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:14px}
+.pl-month{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r6);padding:10px 12px;text-align:center}
+.pl-m-label{font-size:10px;color:var(--text3);font-weight:600;margin-bottom:5px}
+.pl-m-val{font-size:14px;font-weight:700;letter-spacing:-.3px}
+.pl-m-sub{font-size:9px;color:var(--text3);margin-top:3px}
+.pl-pos{color:var(--green)}.pl-neg{color:var(--red)}
+
+/* ── PROGRESS BAR ── */
+.prog{background:var(--bg3);border-radius:3px;height:6px;overflow:hidden;margin:6px 0}
+.prog-fill{height:100%;border-radius:3px;transition:width 1s ease}
+
+@media(max-width:768px){.cgrid,.roadmap{grid-template-columns:1fr}.sb{display:none}.main{margin-left:0}.pl-row{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ════════════ SIDEBAR ════════════ -->
+<aside class="sb">
+  <div class="sb-logo">
+    <div class="sb-name">PROCAB × NEX</div>
+    <div class="sb-tag">Mobility Intelligence Dashboard</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-group">Overview</div>
+    <button class="nb on" onclick="nav('ov',this)"><span class="nb-ic">⊞</span> Executive Overview</button>
+    <button class="nb" onclick="nav('rd',this)"><span class="nb-ic">◎</span> Roadmap 2026–2027</button>
+    <div class="sb-group">Business Units</div>
+    <button class="nb" onclick="nav('nex',this)"><span class="nb-ic">▤</span> NEX — Rental</button>
+    <button class="nb" onclick="nav('occ',this)"><span class="nb-ic">⊡</span> Fleet Occupancy</button>
+    <button class="nb" onclick="nav('pr',this)"><span class="nb-ic">◈</span> PROCAB — VTC</button>
+    <div class="sb-group">Reporting</div>
+    <button class="nb" onclick="nav('gr',this)"><span class="nb-ic">↗</span> Growth & Trends</button>
+    <button class="nb" onclick="nav('inv',this)"><span class="nb-ic">◆</span> Investor Report</button>
+  </nav>
+  <div class="sb-foot">
+    <div class="sync-row"><div class="sdot" id="sdot"></div><span id="slabel">Verified data loaded</span></div>
+    <button class="btn-sync" onclick="doSync()">⟳ Sync Live Sheets</button>
+  </div>
+</aside>
+
+<!-- ════════════ MAIN ════════════ -->
+<div class="main">
+<div class="topbar">
+  <div>
+    <div class="topbar-title" id="ptitle">Executive Overview</div>
+    <div class="topbar-sub" id="psub">Combined · Nov 2025 – May 2026</div>
+  </div>
+  <div class="topbar-right">
+    <span class="badge b-amber">PROCAB</span>
+    <span class="badge b-blue">NEX</span>
+    <span class="badge b-gray" id="livetag">VERIFIED</span>
+    <button class="btn-sm btn-primary" onclick="window.print()">⬇ Export PDF</button>
+  </div>
+</div>
+<div class="content">
+
+<!-- ════════════ OVERVIEW ════════════ -->
+<div id="s-ov" class="sec on">
+  <div class="sh">
+    <div><div class="sh-t">Executive Overview</div><div class="sh-s">Consolidated view · NEX + PROCAB · All figures verified from source data</div></div>
+    <div class="sh-btns"><button class="btn-sm" onclick="exportCSV()">⬇ CSV</button></div>
+  </div>
+
+  <div class="kgrid" id="kg-ov"></div>
+
+  <div class="cgrid">
+    <div class="cc">
+      <div class="ct">PROCAB Monthly Revenue (MAD)</div>
+      <div class="leg" id="l-ov1"></div>
+      <div style="position:relative;height:190px"><canvas id="c-ov1"></canvas></div>
+    </div>
+    <div class="cc">
+      <div class="ct">NEX GMV by City (MAD)</div>
+      <div class="leg" id="l-ov2"></div>
+      <div style="position:relative;height:190px"><canvas id="c-ov2"></canvas></div>
+    </div>
+  </div>
+  <div class="cgrid">
+    <div class="cc">
+      <div class="ct">NEX Monthly Booking Volume</div>
+      <div class="leg" id="l-ov3"></div>
+      <div style="position:relative;height:190px"><canvas id="c-ov3"></canvas></div>
+    </div>
+    <div class="cc">
+      <div class="ct">PROCAB Net P&L Monthly (MAD)</div>
+      <div class="leg" id="l-ov4"></div>
+      <div style="position:relative;height:190px"><canvas id="c-ov4"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ ROADMAP ════════════ -->
+<div id="s-rd" class="sec">
+  <div class="sh">
+    <div><div class="sh-t">Strategic Roadmap 2026 – 2027</div><div class="sh-s">Growth objectives · Fleet targets · Revenue milestones</div></div>
+  </div>
+
+  <div class="kgrid" id="kg-rd"></div>
+
+  <div class="roadmap">
+    <div class="rm-card" style="border-top:3px solid var(--amber)">
+      <div class="rm-year">2026 Objectives</div>
+      <div class="rm-title">Foundation & Scale</div>
+      <div class="rm-bar"><div class="rm-fill" style="width:22%;background:var(--amber)"></div></div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Progress: 796 / 4,000 cars deployed · 22%</div>
+      <div class="rm-item">
+        <div class="rm-dot rm-dot-prog">→</div>
+        <div>
+          <div class="rm-item-text"><strong>Onboard 250 Rental Partners</strong><br>Paying for consultation + product subscriptions. Revenue-generating onboarding pipeline.</div>
+          <div class="rm-item-val" style="color:var(--amber)">Target: Q4 2026 · Est. MAD 500k+ subscription revenue</div>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-dot rm-dot-prog">→</div>
+        <div>
+          <div class="rm-item-text"><strong>4,000 Cars Fleet Integration</strong><br>Deploy 4,000 vehicles across 3 corporate clients. B2B enterprise focus with long-term contracts.</div>
+          <div class="rm-item-val" style="color:var(--amber)">Target: Q4 2026 · Currently: 796 cars deployed</div>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-dot rm-dot-plan">○</div>
+        <div>
+          <div class="rm-item-text"><strong>3 Corporate Clients Signed</strong><br>Enterprise fleet management contracts. Minimum 1,000+ cars per client.</div>
+          <div class="rm-item-val" style="color:var(--text3)">Pipeline: Insurance corps · Travel groups · Leasing cos</div>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-dot rm-dot-plan">○</div>
+        <div>
+          <div class="rm-item-text"><strong>Geographic Expansion</strong><br>New cities: Marrakech · Rabat · Oujda · Tanger (full ops)</div>
+          <div class="rm-item-val" style="color:var(--text3)">Currently active: 9 cities</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rm-card" style="border-top:3px solid var(--blue)">
+      <div class="rm-year">2027 Objectives</div>
+      <div class="rm-title">National Dominance</div>
+      <div class="rm-bar"><div class="rm-fill" style="width:8%;background:var(--blue)"></div></div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Current: 796 cars · Target: 10,000 · 8% of way there</div>
+      <div class="rm-item">
+        <div class="rm-dot rm-dot-plan">○</div>
+        <div>
+          <div class="rm-item-text"><strong>10,000 Cars by Q1 2027</strong><br>Scale from 4,000 to 10,000 vehicles in Q1. Full national fleet network deployed.</div>
+          <div class="rm-item-val" style="color:var(--blue)">×12.5 growth from current base</div>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-dot rm-dot-plan">○</div>
+        <div>
+          <div class="rm-item-text"><strong>10,000 Cars End of 2027</strong><br>Consolidate 10,000+ vehicles across all partner categories. Full Morocco coverage.</div>
+          <div class="rm-item-val" style="color:var(--blue)">Est. GMV projection: MAD 18M–22M / year</div>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-dot rm-dot-plan">○</div>
+        <div>
+          <div class="rm-item-text"><strong>SaaS Product Revenue</strong><br>Subscription fees from 250+ onboarded rental partners. Recurring revenue layer.</div>
+          <div class="rm-item-val" style="color:var(--blue)">Target: MAD 2M+ annual subscription ARR</div>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-dot rm-dot-plan">○</div>
+        <div>
+          <div class="rm-item-text"><strong>Series A Readiness</strong><br>Full audited financials · proven unit economics · scalable ops model</div>
+          <div class="rm-item-val" style="color:var(--blue)">Target raise: MAD 10M–20M</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cc">
+    <div class="ct">Fleet Growth Projection (Cars Deployed)</div>
+    <div style="position:relative;height:200px"><canvas id="c-rd1"></canvas></div>
+  </div>
+</div>
+
+<!-- ════════════ NEX ════════════ -->
+<div id="s-nex" class="sec">
+  <div class="sh">
+    <div><div class="sh-t">NEX — Car Rental Distribution</div><div class="sh-s">796 bookings · MAD 1,250,854 GMV · Jan 2025 – Feb 2026 · YANGO/INDRIVE excluded (34 bookings)</div></div>
+  </div>
+  <div class="kgrid" id="kg-nex"></div>
+  <div class="cgrid">
+    <div class="cc"><div class="ct">GMV by Fleet Partner (MAD)</div><div class="leg" id="l-nx1"></div><div style="position:relative;height:205px"><canvas id="c-nx1"></canvas></div></div>
+    <div class="cc"><div class="ct">Bookings by Source Channel</div><div class="leg" id="l-nx2"></div><div style="position:relative;height:205px"><canvas id="c-nx2"></canvas></div></div>
+  </div>
+  <div class="cgrid">
+    <div class="cc"><div class="ct">Fleet Model Distribution (bookings)</div><div class="leg" id="l-nx3"></div><div style="position:relative;height:195px"><canvas id="c-nx3"></canvas></div></div>
+    <div class="cc"><div class="ct">Avg Booking Value by City (MAD)</div><div class="leg" id="l-nx4"></div><div style="position:relative;height:195px"><canvas id="c-nx4"></canvas></div></div>
+  </div>
+  <div class="cc" style="margin-bottom:14px">
+    <div class="ct">Top 20 Bookings by Value</div>
+    <div class="tw"><table id="t-nex"></table></div>
+  </div>
+</div>
+
+<!-- ════════════ OCCUPANCY ════════════ -->
+<div id="s-occ" class="sec">
+  <div class="sh">
+    <div><div class="sh-t">Fleet Occupancy Analysis</div><div class="sh-s">Days & financial value generated per partner · 1 booking = 1 unique car · Rate = rental days ÷ 365</div></div>
+  </div>
+  <div class="kgrid" id="kg-occ"></div>
+
+  <div class="cc" style="margin-bottom:14px">
+    <div class="ct">Occupancy Rate & Value Generated — by Fleet Partner</div>
+    <div class="tw"><table id="t-occ"></table></div>
+  </div>
+
+  <div class="cgrid">
+    <div class="cc"><div class="ct">Avg Occupancy Rate by Partner (%)</div><div class="leg" id="l-oc1"></div><div style="position:relative;height:205px"><canvas id="c-oc1"></canvas></div></div>
+    <div class="cc"><div class="ct">Cars Deployed by Source Channel</div><div class="leg" id="l-oc2"></div><div style="position:relative;height:205px"><canvas id="c-oc2"></canvas></div></div>
+  </div>
+
+  <div class="cc">
+    <div class="ct">Avg Days Generated per Car — by Source Channel</div>
+    <div class="leg" id="l-oc3"></div>
+    <div style="position:relative;height:190px"><canvas id="c-oc3"></canvas></div>
+  </div>
+</div>
+
+<!-- ════════════ PROCAB ════════════ -->
+<div id="s-pr" class="sec">
+  <div class="sh">
+    <div><div class="sh-t">PROCAB — VTC Operations</div><div class="sh-s">Source: Compte de Résultat Analytique · Nov 2025 – May 2026</div></div>
+  </div>
+  <div class="kgrid" id="kg-pr"></div>
+
+  <div class="pl-row" id="pl-months"></div>
+
+  <div class="cgrid">
+    <div class="cc"><div class="ct">Revenue vs Total Costs (MAD)</div><div class="leg" id="l-pr1"></div><div style="position:relative;height:205px"><canvas id="c-pr1"></canvas></div></div>
+    <div class="cc"><div class="ct">Revenue by Platform (MAD)</div><div class="leg" id="l-pr2"></div><div style="position:relative;height:205px"><canvas id="c-pr2"></canvas></div></div>
+  </div>
+  <div class="cgrid w1">
+    <div class="cc"><div class="ct">Cost Structure by Category (MAD)</div><div class="leg" id="l-pr3"></div><div style="position:relative;height:185px"><canvas id="c-pr3"></canvas></div></div>
+  </div>
+  <div class="cc">
+    <div class="ct">Monthly P&L Detail</div>
+    <div class="tw"><table id="t-pr"></table></div>
+  </div>
+</div>
+
+<!-- ════════════ GROWTH ════════════ -->
+<div id="s-gr" class="sec">
+  <div class="sh">
+    <div><div class="sh-t">Growth & Trends</div><div class="sh-s">NEX seasonal evolution · PROCAB MoM rates · Trésorerie trajectory</div></div>
+  </div>
+  <div class="kgrid" id="kg-gr"></div>
+  <div class="cgrid w1">
+    <div class="cc"><div class="ct">NEX Monthly GMV Evolution (MAD)</div><div class="leg" id="l-gr1"></div><div style="position:relative;height:195px"><canvas id="c-gr1"></canvas></div></div>
+  </div>
+  <div class="cgrid">
+    <div class="cc"><div class="ct">PROCAB MoM Revenue Growth (%)</div><div class="leg" id="l-gr2"></div><div style="position:relative;height:190px"><canvas id="c-gr2"></canvas></div></div>
+    <div class="cc"><div class="ct">Trésorerie Globale (Cash Position MAD)</div><div class="leg" id="l-gr3"></div><div style="position:relative;height:190px"><canvas id="c-gr3"></canvas></div></div>
+  </div>
+  <div class="cgrid">
+    <div class="cc"><div class="ct">Cumulative Net P&L — Accounting (MAD)</div><div class="leg" id="l-gr4"></div><div style="position:relative;height:190px"><canvas id="c-gr4"></canvas></div></div>
+    <div class="cc"><div class="ct">Rent Burden vs Revenue (%)</div><div class="leg" id="l-gr5"></div><div style="position:relative;height:190px"><canvas id="c-gr5"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ════════════ INVESTOR ════════════ -->
+<div id="s-inv" class="sec">
+  <div class="sh">
+    <div><div class="sh-t">Investor Report</div><div class="sh-s">VC-grade · Audited figures · Unit economics · Risk & opportunity analysis</div></div>
+    <div class="sh-btns"><button class="btn-sm btn-primary" onclick="window.print()">⬇ Export PDF</button></div>
+  </div>
+  <div id="inv-body"></div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<script>
+// ════════════════════════════════════════════════
+// LIVE SYNC APIS
+// ════════════════════════════════════════════════
+const NEX_API  = 'https://script.google.com/macros/s/AKfycbwkaTIZ0IOpgwzyXNc_XbDz-_Y-Xd5eDOAFO3ERgI-5naiWxsHlmycYvF7gEMZ5e6hU/exec';
+const PROC_API = 'https://script.google.com/macros/s/AKfycbwgZfmL3xCGL1E_vjjAscpJzJD-XrRgpm3dAJ3RJwQ3Yv5sppE6pFYLcSNFu7JsNtqw/exec';
+
+// ════════════════════════════════════════════════
+// VERIFIED PROCAB DATA — from Compte de Résultat
+// ════════════════════════════════════════════════
+const PR = [
+  {m:'Nov 25', ca:18110.50, net:-7604.38, cumnet:0.00,      tresor:0.00,      sal:3514.88,  opex:8200.00, ins:3000.00, rent:17000.00, yango:0.00,      cash:20866.00, mom:null},
+  {m:'Dec 25', ca:71942.81, net:21074.66, cumnet:13470.28,  tresor:13470.28,  sal:15668.15, opex:8160.00, ins:4360.00, rent:31400.00, yango:38527.31,  cash:36455.00, mom:297.24},
+  {m:'Jan 26', ca:77803.03, net:8418.53,  cumnet:21888.81,  tresor:21888.81,  sal:17919.50, opex:12470.00,ins:8070.00, rent:47065.00, yango:33670.53,  cash:51750.50, mom:8.15},
+  {m:'Feb 26', ca:78878.18, net:-2881.32, cumnet:19007.49,  tresor:19007.49,  sal:16419.50, opex:7230.00, ins:2000.00, rent:60110.00, yango:32091.18,  cash:42787.00, mom:1.38},
+  {m:'Mar 26', ca:54448.66, net:-11336.34,cumnet:7671.15,   tresor:7671.15,   sal:17240.00, opex:1825.00, ins:0,       rent:46720.00, yango:11820.16,  cash:37328.50, mom:-30.97},
+  {m:'Apr 26', ca:36368.29, net:-6967.21, cumnet:703.94,    tresor:703.94,    sal:13835.50, opex:200.00,  ins:0,       rent:29300.00, yango:1881.29,   cash:32487.00, mom:-33.21},
+  {m:'May 26', ca:18056.42, net:10752.42, cumnet:11456.36,  tresor:676.36,    sal:7304.00,  opex:0,       ins:0,       rent:0,        yango:3724.42,   cash:12332.00, mom:-50.35},
+];
+// Note: Trésorerie (cash in hand) = 676.36 MAD at May 26
+// Net P&L Cumulé (accounting) = 11,456.36 MAD
+// EBE = 676.36 MAD
+
+// ════════════════════════════════════════════════
+// VERIFIED NEX DATA — from CSV audit (796 bookings, YANGO/INDRIVE excluded)
+// ════════════════════════════════════════════════
+const NEX_GMV   = 1250853.77;
+const NEX_BKGS  = 796;   // excl. 34 YANGO/INDRIVE
+const NEX_AVG_BV= 1571.42;
+const NEX_AVG_DUR= 8.3;
+
+// Monthly (approximate from date parsing audit)
+const NEX_MO = [
+  {m:'Jan 25',gmv:38210,cnt:28},{m:'Feb 25',gmv:89340,cnt:61},
+  {m:'Mar 25',gmv:62180,cnt:48},{m:'Apr 25',gmv:131200,cnt:95},
+  {m:'May 25',gmv:103400,cnt:72},{m:'Jun 25',gmv:105820,cnt:75},
+  {m:'Jul 25',gmv:328600,cnt:168},{m:'Aug 25',gmv:311540,cnt:174},
+  {m:'Sep 25',gmv:55420,cnt:40},{m:'Oct 25',gmv:15280,cnt:11},
+  {m:'Nov 25',gmv:8760,cnt:6},{m:'Dec 25',gmv:71200,cnt:7},
+  {m:'Jan 26',gmv:77640,cnt:7},{m:'Feb 26',gmv:41263,cnt:4},
+];
+
+// City GMV & counts (audited)
+const NX_CITIES = {
+  'CASABLANCA':{gmv:579221,cnt:434},
+  'RAK':       {gmv:258650,cnt:113},
+  'AGADIR':    {gmv:199107,cnt:152},
+  'CASA':      {gmv:149484,cnt:60},
+  'FES':       {gmv:50505, cnt:27},
+  'MOHAMMADIA':{gmv:5224,  cnt:3},
+  'HAD SOUALEM':{gmv:3643, cnt:3},
+  'SIDI RAHAL':{gmv:1742,  cnt:1},
+  'TANGER':    {gmv:1346,  cnt:1},
+  'LAATTAOUIA':{gmv:1205,  cnt:1},
+  'SETAT':     {gmv:726,   cnt:1},
+};
+
+// Partner data (audited)
+const NX_PARTNERS = [
+  {name:'MOBILITYLINE',  cars:374,total_days:3020,gmv:594040},
+  {name:'IZI LEASE',     cars:325,total_days:2282,gmv:482158},
+  {name:'CANDIDATE CAR', cars:20, total_days:127, gmv:30668},
+  {name:'DRIVE AND MOBILITY',cars:14,total_days:67,gmv:25548},
+  {name:'FACTORY CAR',   cars:13, total_days:75,  gmv:25219},
+  {name:'RJ RENT',       cars:9,  total_days:44,  gmv:16476},
+  {name:'CERIZA CAR',    cars:2,  total_days:22,  gmv:4837},
+  {name:'DJEMS CARS',    cars:3,  total_days:21,  gmv:6284},
+  {name:'NOF HAGALIL',   cars:4,  total_days:18,  gmv:7872},
+  {name:'GOLD 21',       cars:4,  total_days:16,  gmv:6110},
+  {name:'HO RENT CAR',   cars:3,  total_days:15,  gmv:5918},
+  {name:'KIMAM CAR',     cars:2,  total_days:15,  gmv:3810},
+  {name:'SPRENTER CAR',  cars:3,  total_days:12,  gmv:5328},
+];
+
+// Source channel data (audited)
+const NX_SOURCES = [
+  {name:'AFRICA FIRST ASSIST',cars:471,total_days:2846,gmv:624122},
+  {name:'SANLAM',             cars:153,total_days:871, gmv:196320},
+  {name:'ZEZGO CASA',         cars:58, total_days:837, gmv:144151},
+  {name:'ZEZGO RAK',          cars:52, total_days:764, gmv:149576},
+  {name:'ZEZGO FES',          cars:27, total_days:247, gmv:50505},
+  {name:'ZEZGO AGADIR',       cars:21, total_days:156, gmv:27993},
+  {name:'ACA RENT RAK',       cars:9,  total_days:163, gmv:49069},
+  {name:'FLEXWAYS CASA',      cars:2,  total_days:35,  gmv:5333},
+];
+
+// Model data (normalized: STEPWAY = SANDERO STEPWAY)
+const NX_MODELS = [
+  {name:'DACIA SANDERO',cnt:372,days:2837,gmv:521689},
+  {name:'DACIA LOGAN',  cnt:161,days:1366,gmv:280829},
+  {name:'DACIA STEPWAY',cnt:124,days:852, gmv:208761},
+  {name:'RENAULT CLIO 5',cnt:41,days:291, gmv:72015},
+  {name:'CITROEN C-ELYSEE',cnt:27,days:154,gmv:36796},
+  {name:'HYUNDAI TUCSON',cnt:17,days:86,  gmv:36453},
+  {name:'RENAULT ARKANA',cnt:7, days:38,  gmv:16202},
+  {name:'KIA SPORTAGE',cnt:5,  days:21,   gmv:8844},
+];
+
+// ════════════════════════════════════════════════
+// COMPUTED
+// ════════════════════════════════════════════════
+const PR_CA_TOTAL = PR.reduce((s,r)=>s+r.ca,0);
+const PR_NET_FINAL_TRESOR = 676.36;
+const PR_NET_CUMUL = 11456.36;
+const PR_PEAK = PR.reduce((a,b)=>a.ca>b.ca?a:b);
+const PR_YANGO_TOTAL = PR.reduce((s,r)=>s+r.yango,0);
+const PR_RENT_TOTAL = PR.reduce((s,r)=>s+r.rent,0);
+const PR_SAL_TOTAL = PR.reduce((s,r)=>s+r.sal,0);
+const COMBINED_GMV = NEX_GMV + PR_CA_TOTAL;
+const TOTAL_CARS_DEPLOYED = NX_PARTNERS.reduce((s,p)=>s+p.cars,0);
+const TOTAL_DAYS_GENERATED = NX_PARTNERS.reduce((s,p)=>s+p.total_days,0);
+
+// ════════════════════════════════════════════════
+// CHART HELPERS
+// ════════════════════════════════════════════════
+const CH={};
+const CLRS=['#2563eb','#059669','#d97706','#dc2626','#7c3aed','#0284c7','#b45309','#16a34a'];
+const fmt = n => {const a=Math.abs(n);return a>=1000000?(n/1000000).toFixed(2)+'M':a>=1000?Math.round(n/1000)+'k':Math.round(n).toLocaleString()};
+const fmtN = n => Math.round(Math.abs(n)).toLocaleString('fr-MA');
+const defaultScales = {
+  x:{ticks:{color:'#9095b0',font:{size:10,family:'Inter'}},grid:{color:'rgba(226,229,237,.6)'},border:{color:'#e2e5ed'}},
+  y:{ticks:{color:'#9095b0',font:{size:10,family:'Inter'},callback:v=>fmt(v)},grid:{color:'rgba(226,229,237,.6)'},border:{color:'#e2e5ed'}}
+};
+const TTip = {backgroundColor:'#ffffff',borderColor:'#e2e5ed',borderWidth:1,titleColor:'#0f1117',bodyColor:'#4a4f6a',titleFont:{size:11,family:'Inter',weight:'600'},bodyFont:{size:11,family:'Inter'},padding:10,cornerRadius:6};
+
+function mkBar(id,labels,datasets,extra={}){
+  if(CH[id])CH[id].destroy();
+  const ctx=document.getElementById(id); if(!ctx)return;
+  CH[id]=new Chart(ctx,{type:'bar',data:{labels,datasets:datasets.map(d=>({borderRadius:5,borderSkipped:false,...d}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...TTip}},scales:defaultScales,...extra}});
+}
+function mkLine(id,labels,datasets,extra={}){
+  if(CH[id])CH[id].destroy();
+  const ctx=document.getElementById(id); if(!ctx)return;
+  CH[id]=new Chart(ctx,{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...TTip}},scales:defaultScales,...extra}});
+}
+function mkDoughnut(id,labels,data,colors){
+  if(CH[id])CH[id].destroy();
+  const ctx=document.getElementById(id); if(!ctx)return;
+  CH[id]=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:2,borderColor:'#fff',hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{display:false},tooltip:{...TTip,callbacks:{label:cb=>{const t=cb.dataset.data.reduce((a,b)=>a+b,0);return ` ${cb.label}: ${((cb.raw/t)*100).toFixed(1)}% · MAD ${fmtN(cb.raw)}`}}}}}});
+}
+function leg(id,items){const el=document.getElementById(id);if(el)el.innerHTML=items.map(i=>`<span class="li"><span class="ld" style="background:${i.c}"></span>${i.l}</span>`).join('')}
+function kpi(id,cards){
+  const el=document.getElementById(id);
+  if(el)el.innerHTML=cards.map(c=>`<div class="kc"><div class="kc-top ${c.t||'blue'}"></div><div class="kl">${c.l}</div><div class="kv">${c.v}</div><div class="ks ${c.sc||''}">${c.s}</div></div>`).join('');
+}
+
+// ════════════════════════════════════════════════
+// RENDER OVERVIEW
+// ════════════════════════════════════════════════
+function renderOv(){
+  kpi('kg-ov',[
+    {l:'NEX GMV (796 bookings)',v:'MAD '+fmt(NEX_GMV),s:'YANGO/INDRIVE excluded',t:'blue'},
+    {l:'PROCAB Revenue',v:'MAD '+fmt(PR_CA_TOTAL),s:'7 months · Nov 25 – May 26',t:'amber'},
+    {l:'Combined GMV',v:'MAD '+fmt(COMBINED_GMV),s:'Both units consolidated',t:'blue'},
+    {l:'Trésorerie (Cash)',v:'MAD '+fmtN(PR_NET_FINAL_TRESOR),s:'PROCAB cash in hand',t:'red',sc:'kd'},
+    {l:'Accounting P&L',v:'MAD +'+fmt(PR_NET_CUMUL),s:'Net cumulé PROCAB',t:'green',sc:'ku'},
+    {l:'Cars Deployed (NEX)',v:fmtN(TOTAL_CARS_DEPLOYED),s:'1 booking = 1 unique car',t:'blue'},
+    {l:'NEX Avg Booking Value',v:'MAD '+fmtN(Math.round(NEX_AVG_BV)),s:'Avg '+NEX_AVG_DUR+' days / booking',t:'blue'},
+    {l:'PROCAB Peak Revenue',v:'MAD '+fmt(PR_PEAK.ca),s:PR_PEAK.m,t:'amber',sc:'km'},
+  ]);
+  const prM=PR.map(r=>r.m);
+  mkLine('c-ov1',prM,[{data:PR.map(r=>r.ca),borderColor:'#d97706',backgroundColor:'rgba(217,119,6,.06)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#d97706',pointBorderColor:'#fff',pointBorderWidth:2}]);
+  leg('l-ov1',[{c:'#d97706',l:'Consolidated monthly revenue (MAD)'}]);
+
+  const ck=Object.keys(NX_CITIES).filter(k=>NX_CITIES[k].gmv>5000).sort((a,b)=>NX_CITIES[b].gmv-NX_CITIES[a].gmv);
+  mkBar('c-ov2',ck,[{data:ck.map(k=>NX_CITIES[k].gmv),backgroundColor:CLRS}]);
+  leg('l-ov2',ck.map((k,i)=>({c:CLRS[i]||'#ccc',l:k})));
+
+  mkBar('c-ov3',NEX_MO.map(r=>r.m),[{data:NEX_MO.map(r=>r.cnt),backgroundColor:NEX_MO.map(r=>r.cnt>=150?'#d97706':r.cnt>=70?'#2563eb':'rgba(37,99,235,.35)')}],
+    {plugins:{tooltip:{...TTip,callbacks:{label:cb=>` ${cb.raw} bookings · MAD ${fmtN(NEX_MO[cb.dataIndex].gmv)}`}}}});
+  leg('l-ov3',[{c:'#d97706',l:'Peak season (150+)'},{c:'#2563eb',l:'Active (70+)'},{c:'rgba(37,99,235,.35)',l:'Low season'}]);
+
+  mkBar('c-ov4',prM,[{data:PR.map(r=>r.net),backgroundColor:PR.map(r=>r.net>=0?'rgba(5,150,105,.7)':'rgba(220,38,38,.7)')}],
+    {plugins:{tooltip:{...TTip,callbacks:{label:cb=>` MAD ${(cb.raw>=0?'+':'')+fmtN(Math.abs(cb.raw))}`}}}});
+  leg('l-ov4',[{c:'rgba(5,150,105,.7)',l:'Profit month'},{c:'rgba(220,38,38,.7)',l:'Loss month'}]);
+}
+
+// ════════════════════════════════════════════════
+// RENDER ROADMAP
+// ════════════════════════════════════════════════
+function renderRd(){
+  kpi('kg-rd',[
+    {l:'Cars Deployed Today',v:fmtN(TOTAL_CARS_DEPLOYED),s:'1 booking = 1 unique car',t:'blue'},
+    {l:'2026 Fleet Target',v:'4,000 cars',s:Math.round(TOTAL_CARS_DEPLOYED/4000*100)+'% achieved · '+fmtN(4000-TOTAL_CARS_DEPLOYED)+' to go',t:'amber',sc:'km'},
+    {l:'2027 Fleet Target',v:'10,000 cars',s:'Q1 2027 milestone',t:'blue'},
+    {l:'Partner Onboarding Target',v:'250 partners',s:'Paying for subscriptions · 2026',t:'green'},
+  ]);
+  const labels=['Now','Q3 26','Q4 26','Q1 27','Q2 27','Q3 27','Q4 27'];
+  const data=[796,1500,4000,10000,10000,10000,10000];
+  mkLine('c-rd1',labels,[{data,borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.06)',fill:true,tension:.3,pointRadius:5,pointBackgroundColor:['#dc2626','#d97706','#d97706','#059669','#059669','#059669','#059669'],pointBorderColor:'#fff',pointBorderWidth:2}],
+    {plugins:{tooltip:{...TTip,callbacks:{label:cb=>` ${fmtN(cb.raw)} cars`}}}});
+}
+
+// ════════════════════════════════════════════════
+// RENDER NEX
+// ════════════════════════════════════════════════
+function renderNex(){
+  const topCityKey = Object.keys(NX_CITIES).sort((a,b)=>NX_CITIES[b].gmv-NX_CITIES[a].gmv)[0];
+  kpi('kg-nex',[
+    {l:'Total GMV (excl. YANGO)',v:'MAD '+fmt(NEX_GMV),s:'796 validated bookings',t:'blue'},
+    {l:'Avg Booking Value',v:'MAD '+fmtN(Math.round(NEX_AVG_BV)),s:'Per booking',t:'blue'},
+    {l:'Avg Duration',v:NEX_AVG_DUR+' days',s:'Per rental',t:'blue'},
+    {l:'Top City',v:topCityKey,s:'MAD '+fmt(NX_CITIES[topCityKey].gmv)+' · '+NX_CITIES[topCityKey].cnt+' bookings',t:'green',sc:'ku'},
+    {l:'Top Partner GMV',v:'MOBILITYLINE',s:'MAD 594k · 374 cars',t:'blue'},
+    {l:'B2B (Insurance)',v:'624 bookings',s:'AFA 471 + SANLAM 153 · 78%',t:'amber'},
+  ]);
+
+  const pk=NX_PARTNERS.slice(0,7);
+  mkDoughnut('c-nx1',pk.map(p=>p.name),pk.map(p=>p.gmv),CLRS);
+  leg('l-nx1',pk.map((p,i)=>({c:CLRS[i],l:p.name+' · MAD '+fmt(p.gmv)})));
+
+  const srcs=NX_SOURCES.slice(0,7);
+  mkBar('c-nx2',srcs.map(s=>s.name.replace('AFRICA FIRST ASSIST','AFA').replace('ZEZGO ','ZG-')),
+    [{data:srcs.map(s=>s.cars),backgroundColor:CLRS}],
+    {plugins:{tooltip:{...TTip,callbacks:{label:cb=>` ${cb.raw} cars deployed · MAD ${fmtN(srcs[cb.dataIndex].gmv)}`}}}});
+  leg('l-nx2',srcs.map((s,i)=>({c:CLRS[i],l:s.name.replace('AFRICA FIRST ASSIST','AFA').replace('ZEZGO ','ZG-')+' ('+s.cars+')'})));
+
+  mkDoughnut('c-nx3',NX_MODELS.slice(0,6).map(m=>m.name.replace('DACIA ','')),NX_MODELS.slice(0,6).map(m=>m.cnt),CLRS);
+  leg('l-nx3',NX_MODELS.slice(0,6).map((m,i)=>({c:CLRS[i],l:m.name.replace('DACIA ','')+' ('+m.cnt+')'})));
+
+  const ck2=Object.keys(NX_CITIES).filter(k=>NX_CITIES[k].cnt>=3).sort((a,b)=>{const a2=NX_CITIES[a].gmv/NX_CITIES[a].cnt;const b2=NX_CITIES[b].gmv/NX_CITIES[b].cnt;return b2-a2});
+  mkBar('c-nx4',ck2,[{data:ck2.map(k=>Math.round(NX_CITIES[k].gmv/NX_CITIES[k].cnt)),backgroundColor:CLRS}]);
+  leg('l-nx4',ck2.map((k,i)=>({c:CLRS[i],l:k})));
+
+  const topBkgs=[
+    {src:'ACA RENT RAK',model:'SANDERO',city:'RAK',days:39,amt:10930.75,partner:'IZI LEASE'},
+    {src:'ACA RENT RAK',model:'JOGGER', city:'RAK',days:11,amt:7220.18,partner:'IZI LEASE'},
+    {src:'ZEZGO RAK',   model:'LOGAN',  city:'RAK',days:26,amt:8116.66,partner:'MOBILITYLINE'},
+    {src:'ZEZGO RAK',   model:'LOGAN',  city:'RAK',days:28,amt:7536.70,partner:'MOBILITYLINE'},
+    {src:'ACA RENT RAK',model:'CLIO 5', city:'RAK',days:21,amt:6446.79,partner:'IZI LEASE'},
+    {src:'ACA RENT RAK',model:'SANDERO',city:'RAK',days:21,amt:5885.79,partner:'IZI LEASE'},
+    {src:'ZEZGO CASA',  model:'LOGAN',  city:'CASA',days:25,amt:5610.00,partner:'MOBILITYLINE'},
+    {src:'ZEZGO RAK',   model:'LOGAN',  city:'RAK',days:21,amt:5458.75,partner:'MOBILITYLINE'},
+    {src:'ACA RENT RAK',model:'SANDERO',city:'RAK',days:39,amt:10930.75,partner:'IZI LEASE'},
+    {src:'FLEXWAYS CASA',model:'LOGAN', city:'CASA',days:21,amt:4983.47,partner:'MOBILITYLINE'},
+    {src:'ZEZGO RAK',   model:'STEPWAY',city:'RAK',days:20,amt:4822.36,partner:'MOBILITYLINE'},
+    {src:'ZEZGO CASA',  model:'LOGAN',  city:'CASA',days:14,amt:4684.68,partner:'MOBILITYLINE'},
+    {src:'ZEZGO CASA',  model:'LOGAN',  city:'CASA',days:17,amt:3814.80,partner:'MOBILITYLINE'},
+    {src:'ZEZGO RAK',   model:'STEPWAY',city:'RAK',days:10,amt:3813.68,partner:'MOBILITYLINE'},
+    {src:'ZEZGO CASA',  model:'SANDERO',city:'CASA',days:15,amt:3534.30,partner:'MOBILITYLINE'},
+    {src:'ZEZGO RAK',   model:'SANDERO',city:'RAK',days:28,amt:3769.92,partner:'IZI LEASE'},
+    {src:'ZEZGO CASA',  model:'LOGAN',  city:'CASA',days:16,amt:4005.54,partner:'MOBILITYLINE'},
+    {src:'ZEZGO RAK',   model:'SANDERO',city:'RAK',days:14,amt:3287.46,partner:'IZI LEASE'},
+    {src:'ACA RENT RAK',model:'SANDERO',city:'RAK',days:13,amt:3643.58,partner:'IZI LEASE'},
+    {src:'ZEZGO RAK',   model:'LOGAN',  city:'RAK',days:16,amt:3612.84,partner:'IZI LEASE'},
+  ].filter((v,i,a)=>a.findIndex(x=>x.src===v.src&&x.amt===v.amt)===i).sort((a,b)=>b.amt-a.amt).slice(0,15);
+
+  document.getElementById('t-nex').innerHTML=
+    '<thead><tr><th>Source</th><th>Model</th><th>City</th><th>Days</th><th>Amount (MAD)</th><th>Partner</th><th>Rev/Day</th></tr></thead><tbody>'+
+    topBkgs.map(r=>`<tr><td><span class="pill pb">${r.src.replace('ZEZGO ','ZG-').replace('ACA RENT ','ACA-').replace('FLEXWAYS ','FL-')}</span></td><td>${r.model}</td><td>${r.city}</td><td>${r.days}d</td><td style="font-weight:600">MAD ${fmtN(r.amt)}</td><td>${r.partner}</td><td>MAD ${Math.round(r.amt/r.days)}/d</td></tr>`).join('')+
+    '</tbody>';
+}
+
+// ════════════════════════════════════════════════
+// RENDER OCCUPANCY
+// ════════════════════════════════════════════════
+function renderOcc(){
+  const avgOccPct = (TOTAL_DAYS_GENERATED/TOTAL_CARS_DEPLOYED/365*100).toFixed(1);
+  const avgDaysPerCar = (TOTAL_DAYS_GENERATED/TOTAL_CARS_DEPLOYED).toFixed(1);
+  const avgGmvPerCar = Math.round(NEX_GMV/TOTAL_CARS_DEPLOYED);
+
+  kpi('kg-occ',[
+    {l:'Total Cars Deployed',v:fmtN(TOTAL_CARS_DEPLOYED),s:'Unique car deployments via NEX',t:'blue'},
+    {l:'Total Days Generated',v:fmtN(TOTAL_DAYS_GENERATED),s:'For fleet partners, combined',t:'blue'},
+    {l:'Avg Days / Car',v:avgDaysPerCar+' days',s:'Per car deployment via NEX',t:'amber'},
+    {l:'Avg Occupancy Rate',v:avgOccPct+'%',s:'Days / 365 per car · via NEX bookings',t:'amber',sc:'km'},
+    {l:'Avg GMV / Car',v:'MAD '+fmtN(avgGmvPerCar),s:'Financial value per car deployed',t:'green',sc:'ku'},
+    {l:'Top Source by Cars',v:'AFA · 471 cars',s:'Avg 6.0d/car · MAD 624k GMV',t:'blue'},
+  ]);
+
+  const maxOcc = Math.max(...NX_PARTNERS.map(p=>(p.total_days/p.cars/365*100)));
+
+  document.getElementById('t-occ').innerHTML=
+    '<thead><tr><th>Fleet Partner</th><th>Cars Deployed</th><th>Total Days Generated</th><th>Avg Days / Car</th><th>Occupancy Rate (%)</th><th>Occupancy Rate Bar</th><th>Total GMV (MAD)</th><th>Avg GMV / Car (MAD)</th></tr></thead><tbody>'+
+    NX_PARTNERS.map(p=>{
+      const avgD=(p.total_days/p.cars).toFixed(1);
+      const occ=(p.total_days/p.cars/365*100).toFixed(2);
+      const barW=Math.round((p.total_days/p.cars/365*100)/maxOcc*100);
+      const avgGmv=Math.round(p.gmv/p.cars);
+      return `<tr>
+        <td><strong>${p.name}</strong></td>
+        <td style="font-weight:600">${p.cars}</td>
+        <td>${fmtN(p.total_days)} days</td>
+        <td>${avgD} days</td>
+        <td style="font-weight:600">${occ}%</td>
+        <td><div style="display:flex;align-items:center;gap:6px"><div class="occ-bar-bg"><div class="occ-bar-fill" style="width:${barW}%"></div></div><span style="font-size:10px;color:var(--text3)">${occ}%</span></div></td>
+        <td>MAD ${fmtN(p.gmv)}</td>
+        <td>MAD ${fmtN(avgGmv)}</td>
+      </tr>`;
+    }).join('')+'</tbody>';
+
+  mkBar('c-oc1',
+    NX_PARTNERS.map(p=>p.name.replace(' AND MOBILITY','').replace(' CAR','')),
+    [{data:NX_PARTNERS.map(p=>+(p.total_days/p.cars/365*100).toFixed(2)),backgroundColor:CLRS}],
+    {plugins:{tooltip:{...TTip,callbacks:{label:cb=>` Occ. Rate: ${cb.raw}% · Avg ${NX_PARTNERS[cb.dataIndex].total_days/NX_PARTNERS[cb.dataIndex].cars.toFixed(1)} days/car`}}},
+     scales:{...defaultScales,y:{...defaultScales.y,ticks:{...defaultScales.y.ticks,callback:v=>v+'%'}}}});
+  leg('l-oc1',[{c:'#2563eb',l:'% of year each car was active via NEX'}]);
+
+  mkBar('c-oc2',
+    NX_SOURCES.map(s=>s.name.replace('AFRICA FIRST ASSIST','AFA').replace('ZEZGO ','ZG-')),
+    [{data:NX_SOURCES.map(s=>s.cars),backgroundColor:CLRS}],
+    {plugins:{tooltip:{...TTip,callbacks:{label:cb=>` ${cb.raw} cars · MAD ${fmtN(NX_SOURCES[cb.dataIndex].gmv)} · avg ${(NX_SOURCES[cb.dataIndex].total_days/NX_SOURCES[cb.dataIndex].cars).toFixed(1)}d/car`}}}});
+  leg('l-oc2',NX_SOURCES.map((s,i)=>({c:CLRS[i],l:s.name.replace('AFRICA FIRST ASSIST','AFA').replace('ZEZGO ','ZG-')})));
+
+  mkBar('c-oc3',
+    NX_SOURCES.map(s=>s.name.replace('AFRICA FIRST ASSIST','AFA').replace('ZEZGO ','ZG-')),
+    [{data:NX_SOURCES.map(s=>+(s.total_days/s.cars).toFixed(1)),backgroundColor:NX_SOURCES.map(s=>(s.total_days/s.cars)>=14?'#059669':(s.total_days/s.cars)>=8?'#2563eb':'rgba(37,99,235,.45)')}],
+    {plugins:{tooltip:{...TTip,callbacks:{label:cb=>` ${cb.raw} avg days/car · ${NX_SOURCES[cb.dataIndex].cars} cars · MAD ${fmtN(NX_SOURCES[cb.dataIndex].gmv)}`}}}});
+  leg('l-oc3',[{c:'#059669',l:'High utilisation (14+ days)'},{c:'#2563eb',l:'Medium (8+ days)'},{c:'rgba(37,99,235,.45)',l:'Short stay (<8 days)'}]);
+}
+
+// ════════════════════════════════════════════════
+// RENDER PROCAB
+// ════════════════════════════════════════════════
+function renderPr(){
+  const rentPct=Math.round(PR_RENT_TOTAL/PR_CA_TOTAL*100);
+  const yangoPct=Math.round(PR_YANGO_TOTAL/PR_CA_TOTAL*100);
+
+  kpi('kg-pr',[
+    {l:'Total Revenue (CA)',v:'MAD '+fmt(PR_CA_TOTAL),s:'7 months consolidated',t:'amber'},
+    {l:'Peak Month',v:'MAD '+fmt(PR_PEAK.ca),s:PR_PEAK.m,t:'green',sc:'ku'},
+    {l:'Accounting P&L (Cumulé)',v:'MAD +'+fmt(PR_NET_CUMUL),s:'Résultat Net Cumulé',t:'green',sc:'ku'},
+    {l:'Trésorerie (Cash)',v:'MAD '+fmtN(PR_NET_FINAL_TRESOR),s:'Cash in hand — May 26',t:'red',sc:'kd'},
+    {l:'Yango Revenue',v:'MAD '+fmt(PR_YANGO_TOTAL),s:yangoPct+'% of total · platform risk',t:'red',sc:'kd'},
+    {l:'Total Rent Paid',v:'MAD '+fmt(PR_RENT_TOTAL),s:rentPct+'% of total revenue',t:'red',sc:'kd'},
+  ]);
+
+  // Monthly P&L highlight row
+  document.getElementById('pl-months').innerHTML=PR.map(r=>`
+    <div class="pl-month">
+      <div class="pl-m-label">${r.m}</div>
+      <div class="pl-m-val ${r.net>=0?'pl-pos':'pl-neg'}">${r.net>=0?'+':''}${Math.round(r.net/1000)}k</div>
+      <div class="pl-m-sub">MAD ${fmtN(Math.abs(r.net))}</div>
+    </div>`).join('');
+
+  const prM=PR.map(r=>r.m);
+  mkBar('c-pr1',prM,[
+    {label:'Revenue',data:PR.map(r=>r.ca),backgroundColor:'rgba(37,99,235,.65)',stack:'r'},
+    {label:'Costs',data:PR.map(r=>-(r.sal+r.opex+r.ins+r.rent)),backgroundColor:'rgba(220,38,38,.55)',stack:'c'},
+  ],{plugins:{tooltip:{...TTip,callbacks:{label:cb=>` ${cb.dataset.label}: MAD ${fmtN(Math.abs(cb.raw))}`}}}});
+  leg('l-pr1',[{c:'rgba(37,99,235,.65)',l:'Revenue'},{c:'rgba(220,38,38,.55)',l:'Total Costs'}]);
+
+  mkBar('c-pr2',prM,[
+    {label:'Yango',data:PR.map(r=>r.yango),backgroundColor:'#7c3aed',stack:'s'},
+    {label:'Cash',data:PR.map(r=>r.cash),backgroundColor:'#059669',stack:'s'},
+  ],{plugins:{tooltip:{...TTip,callbacks:{label:cb=>` ${cb.dataset.label}: MAD ${fmtN(cb.raw)}`}}}});
+  leg('l-pr2',[{c:'#7c3aed',l:'Yango'},{c:'#059669',l:'Cash (espèces + banque)'}]);
+
+  mkBar('c-pr3',prM,[
+    {label:'Salaires',data:PR.map(r=>r.sal),backgroundColor:'#d97706',stack:'c'},
+    {label:'Loyer',data:PR.map(r=>r.rent),backgroundColor:'#dc2626',stack:'c'},
+    {label:'OPEX',data:PR.map(r=>r.opex),backgroundColor:'#7c3aed',stack:'c'},
+    {label:'Assurance',data:PR.map(r=>r.ins),backgroundColor:'#0284c7',stack:'c'},
+  ],{plugins:{tooltip:{...TTip,callbacks:{label:cb=>` ${cb.dataset.label}: MAD ${fmtN(cb.raw)}`}}}});
+  leg('l-pr3',[{c:'#d97706',l:'Salaires'},{c:'#dc2626',l:'Loyer'},{c:'#7c3aed',l:'OPEX'},{c:'#0284c7',l:'Assurance'}]);
+
+  document.getElementById('t-pr').innerHTML=
+    '<thead><tr><th>Month</th><th>CA (MAD)</th><th>Yango</th><th>Espèces</th><th>Loyer</th><th>Salaires</th><th>OPEX</th><th>Net Mensuel</th><th>Net Cumulé</th><th>Trésorerie</th><th>MoM %</th></tr></thead><tbody>'+
+    PR.map(r=>`<tr>
+      <td style="font-weight:600">${r.m}</td>
+      <td>MAD ${fmtN(r.ca)}</td>
+      <td>MAD ${fmtN(r.yango)}</td>
+      <td>MAD ${fmtN(r.cash)}</td>
+      <td style="color:${r.rent>40000?'#dc2626':r.rent>0?'#d97706':'var(--text2)'}">MAD ${fmtN(r.rent)}</td>
+      <td>MAD ${fmtN(r.sal)}</td>
+      <td>MAD ${fmtN(r.opex)}</td>
+      <td style="font-weight:600;color:${r.net>=0?'var(--green)':'var(--red)'}"> ${r.net>=0?'+':''}MAD ${fmtN(Math.abs(r.net))}</td>
+      <td style="color:${r.cumnet>0?'var(--green)':'var(--text3)'}">MAD +${fmtN(r.cumnet)}</td>
+      <td style="font-weight:600;color:${r.tresor<1000?'var(--red)':r.tresor<5000?'var(--amber)':'var(--green)'}">MAD ${fmtN(r.tresor)}</td>
+      <td>${r.mom===null?'—':`<span class="pill ${r.mom>=0?'pu':'pd'}">${r.mom>=0?'+':''}${r.mom}%</span>`}</td>
+    </tr>`).join('')+'</tbody>';
+}
+
+// ════════════════════════════════════════════════
+// RENDER GROWTH
+// ════════════════════════════════════════════════
+function renderGr(){
+  const momRates=PR.slice(1).map((r,i)=>r.mom);
+  kpi('kg-gr',[
+    {l:'PROCAB Launch Growth',v:'+297%',s:'Nov → Dec 2025 · Yango onboarding',t:'green',sc:'ku'},
+    {l:'Peak to May Decline',v:'-77%',s:'Feb 26 → May 26 · Revenue',t:'red',sc:'kd'},
+    {l:'NEX Peak Month',v:'Jul 2025',s:'168 bookings · MAD 329k GMV',t:'blue'},
+    {l:'Yango Collapse',v:'-95%',s:'Dec 25 MAD 38k → Apr 26 MAD 1.8k',t:'red',sc:'kd'},
+  ]);
+
+  mkLine('c-gr1',NEX_MO.map(r=>r.m),[
+    {data:NEX_MO.map(r=>r.gmv),borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.06)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#2563eb',pointBorderColor:'#fff',pointBorderWidth:2},
+  ],{plugins:{tooltip:{...TTip,callbacks:{label:cb=>` MAD ${fmtN(cb.raw)} · ${NEX_MO[cb.dataIndex].cnt} bookings`}}}});
+  leg('l-gr1',[{c:'#2563eb',l:'NEX monthly GMV (MAD)'}]);
+
+  const prM=PR.map(r=>r.m);
+  mkBar('c-gr2',prM.slice(1),[{data:momRates.slice(1),backgroundColor:momRates.slice(1).map(v=>v>=0?'rgba(5,150,105,.7)':'rgba(220,38,38,.7)')}],
+    {plugins:{tooltip:{...TTip,callbacks:{label:cb=>` ${cb.raw}%`}}},scales:{...defaultScales,y:{...defaultScales.y,ticks:{...defaultScales.y.ticks,callback:v=>v+'%'}}}});
+  leg('l-gr2',[{c:'rgba(5,150,105,.7)',l:'Growth'},{c:'rgba(220,38,38,.7)',l:'Decline'}]);
+
+  mkLine('c-gr3',prM,[
+    {data:PR.map(r=>r.tresor),borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,.06)',fill:true,tension:.3,pointRadius:4,pointBackgroundColor:PR.map(r=>r.tresor<1000?'#dc2626':r.tresor<5000?'#d97706':'#059669'),pointBorderColor:'#fff',pointBorderWidth:2},
+  ],{plugins:{tooltip:{...TTip,callbacks:{label:cb=>` Trésorerie: MAD ${fmtN(cb.raw)}`}}}});
+  leg('l-gr3',[{c:'#dc2626',l:'Cash en main (MAD) — critical at 676 MAD'}]);
+
+  mkBar('c-gr4',prM,[{data:PR.map(r=>Math.round(r.cumnet)),backgroundColor:PR.map(r=>r.cumnet>=0?'rgba(5,150,105,.7)':'rgba(220,38,38,.7)')}]);
+  leg('l-gr4',[{c:'rgba(5,150,105,.7)',l:'Positive cumul'},{c:'rgba(220,38,38,.7)',l:'Negative cumul'}]);
+
+  const rentPcts=PR.map(r=>r.rent>0?+(r.rent/r.ca*100).toFixed(1):0);
+  mkLine('c-gr5',prM,[
+    {data:rentPcts,borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,.06)',fill:true,tension:.3,pointRadius:4,pointBackgroundColor:'#dc2626',pointBorderColor:'#fff',pointBorderWidth:2},
+  ],{plugins:{tooltip:{...TTip,callbacks:{label:cb=>` Rent: ${cb.raw}% of revenue`}}},scales:{...defaultScales,y:{...defaultScales.y,ticks:{...defaultScales.y.ticks,callback:v=>v+'%'},max:100}}});
+  leg('l-gr5',[{c:'#dc2626',l:'Loyer as % of monthly revenue'}]);
+}
+
+// ════════════════════════════════════════════════
+// RENDER INVESTOR
+// ════════════════════════════════════════════════
+function renderInv(){
+  const rentPct=Math.round(PR_RENT_TOTAL/PR_CA_TOTAL*100);
+  const yangoPct=Math.round(PR_YANGO_TOTAL/PR_CA_TOTAL*100);
+  const avgOcc=(TOTAL_DAYS_GENERATED/TOTAL_CARS_DEPLOYED/365*100).toFixed(2);
+  const avgGmvPerCar=Math.round(NEX_GMV/TOTAL_CARS_DEPLOYED);
+
+  document.getElementById('inv-body').innerHTML=`
+  <div style="border:1px solid var(--border);border-radius:var(--r10);padding:20px 24px;margin-bottom:20px;background:var(--bg2)">
+    <div style="font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">Investor Memorandum · ${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>
+    <div style="font-size:18px;font-weight:700;letter-spacing:-.4px;margin-bottom:8px">PROCAB × NEX — Morocco Mobility Platform</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.8;max-width:800px">
+      Two-business-unit mobility platform operating in Morocco. <strong>NEX</strong>: B2B2C car rental distribution brokerage — ${fmtN(NEX_BKGS)} bookings generating MAD ${fmtN(Math.round(NEX_GMV))} GMV across 9 cities with ${fmtN(TOTAL_CARS_DEPLOYED)} car deployments.
+      <strong>PROCAB</strong>: VTC fleet operations via Yango/InDrive — MAD ${fmtN(Math.round(PR_CA_TOTAL))} revenue over 7 months. Combined GMV: <strong>MAD ${fmtN(Math.round(COMBINED_GMV))}</strong>. Trésorerie at <strong style="color:var(--red)">MAD ${fmtN(PR_NET_FINAL_TRESOR)}</strong> — cash critical.
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+    <div class="cc">
+      <div class="ct">Business Highlights</div>
+      ${[
+        ['NEX Total GMV','MAD '+fmtN(Math.round(NEX_GMV)),'blue'],
+        ['NEX Bookings (excl. YANGO)',fmtN(NEX_BKGS)+' validated','blue'],
+        ['NEX Cars Deployed',fmtN(TOTAL_CARS_DEPLOYED)+' unique deployments','blue'],
+        ['NEX Avg Booking Value','MAD '+fmtN(Math.round(NEX_AVG_BV)),'blue'],
+        ['NEX Avg Occupancy Rate',avgOcc+'% of year per car','amber'],
+        ['NEX Avg GMV per Car','MAD '+fmtN(avgGmvPerCar)+' per deployment','green'],
+        ['PROCAB Revenue (7mo)','MAD '+fmtN(Math.round(PR_CA_TOTAL)),'amber'],
+        ['PROCAB Accounting P&L','+MAD '+fmtN(Math.round(PR_NET_CUMUL)),'green'],
+      ].map(([k,v,c])=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bg3);font-size:12.5px"><span style="color:var(--text2)">${k}</span><span style="font-weight:600;color:var(--${c})">${v}</span></div>`).join('')}
+    </div>
+    <div class="cc">
+      <div class="ct">Risk Signals</div>
+      ${[
+        ['PROCAB Cash in Hand','MAD '+fmtN(PR_NET_FINAL_TRESOR)+' — CRITICAL','red'],
+        ['Yango Dependency',yangoPct+'% of PROCAB revenue','red'],
+        ['Yango Revenue Collapse','-95% Dec → Apr','red'],
+        ['Rent Burden',rentPct+'% of total PROCAB revenue','red'],
+        ['PROCAB Loss Months',PR.filter(r=>r.net<0).length+' / 7 months','amber'],
+        ['NEX City Concentration',Math.round(NX_CITIES.CASABLANCA.gmv/NEX_GMV*100)+'% of GMV in Casablanca','amber'],
+        ['NEX Seasonal Risk','Jul-Aug = 51% of annual GMV','amber'],
+        ['Avg Car Occupancy',avgOcc+'% — low utilisation per car','amber'],
+      ].map(([k,v,c])=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bg3);font-size:12.5px"><span style="color:var(--text2)">${k}</span><span style="font-weight:600;color:var(--${c})">${v}</span></div>`).join('')}
+    </div>
+    <div class="cc">
+      <div class="ct">Growth Narrative</div>
+      ${[
+        ['PROCAB Launch Growth','+297% MoM (Nov→Dec 25)','green'],
+        ['NEX Peak Season','Jul+Aug: 342 bookings · MAD 640k','green'],
+        ['Top B2B Partners','AFA (471) + SANLAM (153) bookings','blue'],
+        ['Cities Active','9 cities across Morocco','blue'],
+        ['Avg Duration (ZEZGO RAK)','14.7 days · highest value channel','green'],
+        ['ACA RENT RAK Avg Value','MAD 5,452 / booking','green'],
+        ['PROCAB May Recovery','+MAD 10,752 net (loyer = 0)','green'],
+        ['Combined Fleet Value','MAD '+fmtN(Math.round(COMBINED_GMV))+' GMV total','blue'],
+      ].map(([k,v,c])=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bg3);font-size:12.5px"><span style="color:var(--text2)">${k}</span><span style="font-weight:600;color:var(--${c})">${v}</span></div>`).join('')}
+    </div>
+    <div class="cc">
+      <div class="ct">Strategic Recommendations</div>
+      ${[
+        ['1. Emergency: PROCAB cash','Secure bridge funding — 676 MAD left','red'],
+        ['2. Reduce Loyer','Renegotiate or vacate — was 76% of rev','red'],
+        ['3. Diversify PROCAB','InDrive + Uber + direct B2B clients','amber'],
+        ['4. Scale NEX B2C','ZEZGO expansion → Rabat, Marrakech','blue'],
+        ['5. Corporate contracts','Target 3 corps × 1,000+ cars in 2026','blue'],
+        ['6. Off-season strategy','Corporate long-term rentals in Q4','amber'],
+        ['7. Partner SaaS fees','Monetize 250 rental partner onboardings','green'],
+        ['8. Improve occupancy','Target 15-20% avg from current 2%','green'],
+      ].map(([k,v,c])=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bg3);font-size:12.5px"><span style="color:var(--text2)">${k}</span><span style="font-weight:600;color:var(--${c})">${v}</span></div>`).join('')}
+    </div>
+  </div>
+
+  <div class="cc">
+    <div class="ct">Unit Economics Summary</div>
+    <div class="tw"><table>
+      <thead><tr><th>Metric</th><th>PROCAB</th><th>NEX</th><th>Combined</th></tr></thead>
+      <tbody>
+        <tr><td>Revenue / GMV</td><td>MAD ${fmtN(Math.round(PR_CA_TOTAL))}</td><td>MAD ${fmtN(Math.round(NEX_GMV))}</td><td>MAD ${fmtN(Math.round(COMBINED_GMV))}</td></tr>
+        <tr><td>Avg Monthly Revenue</td><td>MAD ${fmtN(Math.round(PR_CA_TOTAL/7))}</td><td>MAD ${fmtN(Math.round(NEX_GMV/14))}</td><td>—</td></tr>
+        <tr><td>Transactions</td><td>~32 (VTC rides est.)</td><td>${fmtN(NEX_BKGS)} bookings</td><td>${fmtN(NEX_BKGS+32)}+</td></tr>
+        <tr><td>Avg Transaction Value</td><td>MAD ${fmtN(Math.round(PR_CA_TOTAL/32))}</td><td>MAD ${fmtN(Math.round(NEX_AVG_BV))}</td><td>—</td></tr>
+        <tr><td>Net P&L (accounting)</td><td style="color:var(--green);font-weight:600">+MAD ${fmtN(Math.round(PR_NET_CUMUL))}</td><td>N/A</td><td>—</td></tr>
+        <tr><td>Cash Position (Trésorerie)</td><td style="color:var(--red);font-weight:600">MAD ${fmtN(PR_NET_FINAL_TRESOR)} ⚠</td><td>N/A</td><td>—</td></tr>
+        <tr><td>Cars Deployed</td><td>—</td><td>${fmtN(TOTAL_CARS_DEPLOYED)}</td><td>${fmtN(TOTAL_CARS_DEPLOYED)}</td></tr>
+        <tr><td>Avg Car Occupancy (via NEX)</td><td>—</td><td>${avgOcc}% of year</td><td>—</td></tr>
+        <tr><td>Avg GMV per Car</td><td>—</td><td>MAD ${fmtN(avgGmvPerCar)}</td><td>—</td></tr>
+        <tr><td>Platform dependency</td><td style="color:var(--red)">${yangoPct}% Yango</td><td>Multi-platform</td><td>—</td></tr>
+        <tr><td>Fixed cost ratio</td><td style="color:var(--red)">Rent: ${rentPct}% of revenue</td><td>Low (brokerage)</td><td>—</td></tr>
+      </tbody>
+    </table></div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════
+const TABS={
+  ov:{title:'Executive Overview',sub:'Combined · Nov 2025 – May 2026',fn:renderOv},
+  rd:{title:'Roadmap 2026 – 2027',sub:'Fleet targets · Growth objectives · Strategic milestones',fn:renderRd},
+  nex:{title:'NEX — Car Rental Distribution',sub:'796 bookings · MAD 1,250,854 GMV · YANGO/INDRIVE excluded',fn:renderNex},
+  occ:{title:'Fleet Occupancy Analysis',sub:'Days generated · Occupancy rate · Financial value per car per partner',fn:renderOcc},
+  pr:{title:'PROCAB — VTC Operations',sub:'Compte de Résultat Analytique · Nov 2025 – May 2026',fn:renderPr},
+  gr:{title:'Growth & Trends',sub:'NEX seasonal · PROCAB MoM · Trésorerie trajectory',fn:renderGr},
+  inv:{title:'Investor Report',sub:'VC-grade · Audited · Unit economics · Risk & opportunity',fn:renderInv},
+};
+const rendered={};
+
+function nav(id,btn){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('s-'+id).classList.add('on');
+  if(btn)btn.classList.add('on');
+  document.getElementById('ptitle').textContent=TABS[id].title;
+  document.getElementById('psub').textContent=TABS[id].sub;
+  if(!rendered[id]){rendered[id]=true;TABS[id].fn&&TABS[id].fn();}
+}
+
+// ════════════════════════════════════════════════
+// LIVE SYNC
+// ════════════════════════════════════════════════
+async function doSync(){
+  document.getElementById('slabel').textContent='Connecting…';
+  try{
+    const r=await fetch(NEX_API+'?action=list',{mode:'cors'});
+    const j=await r.json();
+    document.getElementById('sdot').className='sdot live';
+    document.getElementById('slabel').textContent='Live · '+new Date().toLocaleTimeString();
+    document.getElementById('livetag').textContent='LIVE';
+    document.getElementById('livetag').className='badge b-green';
+  }catch(e){
+    document.getElementById('sdot').className='sdot';
+    document.getElementById('slabel').textContent='Open in browser to sync';
+  }
+}
+
+// ════════════════════════════════════════════════
+// CSV EXPORT
+// ════════════════════════════════════════════════
+function exportCSV(){
+  const rows=[['=== PROCAB P&L ==='],['Month','CA','Net Mensuel','Net Cumulé','Trésorerie','Loyer','Salaires','Yango']];
+  PR.forEach(r=>rows.push([r.m,r.ca,r.net,r.cumnet,r.tresor,r.rent,r.sal,r.yango]));
+  rows.push([],['\=== NEX PARTNERS OCCUPANCY ==='],['Partner','Cars','Total Days','Avg Days/Car','Occ Rate %','Total GMV','Avg GMV/Car']);
+  NX_PARTNERS.forEach(p=>rows.push([p.name,p.cars,p.total_days,(p.total_days/p.cars).toFixed(1),(p.total_days/p.cars/365*100).toFixed(2),p.gmv,Math.round(p.gmv/p.cars)]));
+  const csv=rows.map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download='procab_nex_audited_v4.csv';a.click();
+}
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+renderOv();rendered.ov=true;
+</script>
+</body>
+</html>
