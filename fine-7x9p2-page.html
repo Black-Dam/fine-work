@@ -1011,7 +1011,6 @@ async function doSync() {
         const dateStr = row['DATE'];
         if (!dateStr) return;
         
-        // Extraction basique du mois pour regrouper les revenus (ex: "05/26")
         const parts = dateStr.split('/');
         if(parts.length < 3) return;
         const monthKey = parts[1] + '/' + parts[2].substring(2); 
@@ -1030,9 +1029,16 @@ async function doSync() {
         prByMonth[monthKey].net += (revenuBrut - loyer - salaire);
       });
 
-      // Écrasement des variables globales PROCAB
+      // Écrasement des variables globales PROCAB ET RECALCUL DES TOTAUX
       PR = Object.values(prByMonth);
-      PR_CA_TOTAL = PR.reduce((s,r)=>s+r.ca,0);
+      if (PR.length > 0) {
+        PR_CA_TOTAL = PR.reduce((s,r)=>s+r.ca,0);
+        PR_RENT_TOTAL = PR.reduce((s,r)=>s+r.rent,0);
+        PR_SAL_TOTAL = PR.reduce((s,r)=>s+r.sal,0);
+        PR_NET_CUMUL = PR.reduce((s,r)=>s+r.net,0);
+        PR_PEAK = PR.reduce((a,b)=>a.ca>b.ca?a:b);
+        PR_NET_FINAL_TRESOR = PR_NET_CUMUL; // Trésorerie alignée sur le cumul net
+      }
       COMBINED_GMV = NEX_GMV + PR_CA_TOTAL;
     }
 
@@ -1076,7 +1082,9 @@ function exportCSV(){
 // ════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════
-renderOv();rendered.ov=true;
+renderOv(); 
+rendered.ov = true;
+doSync(); 
 </script>
 </body>
 </html>
