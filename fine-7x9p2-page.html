@@ -986,7 +986,7 @@ async function doSync() {
 
           // Groupement par Ville, Partenaire, Source, Modèle
           if(city) { cities[city] = cities[city] || {gmv: 0, cnt: 0}; cities[city].gmv += amount; cities[city].cnt++; }
-          if(partner) { partners[partner] = partners[partner] || {name: partner, cars: 0, total_days: 0, gmv: 0}; partners[partner].gmv += amount; partners[partner].total_days += days; partners[partner].cars++; }
+          if(partner) {if (!partners[partner]) {partners[partner] = {name: partner, cars: 0, total_days: 0, gmv: 0};} partners[partner].gmv += amount; partners[partner].total_days += days; partners[partner].cars += 1; }
           if(source) { sources[source] = sources[source] || {name: source, cars: 0, total_days: 0, gmv: 0}; sources[source].gmv += amount; sources[source].total_days += days; sources[source].cars++; }
           if(model) { models[model] = models[model] || {name: model, cnt: 0, days: 0, gmv: 0}; models[model].cnt++; models[model].days += days; models[model].gmv += amount; }
 
@@ -1032,6 +1032,7 @@ async function doSync() {
         if (!dateStr) return;
         
         const parts = dateStr.split('/');
+        const monthKey = parts[1] + '/' + parts[2].substring(2);
         if(parts.length < 3) return;
         
         const mIdx = parseInt(parts[1]) - 1;
@@ -1044,17 +1045,20 @@ async function doSync() {
         const salaire = parseAmount(row['SALAIRE NET (BONUS + CONPENSATION 25 MAD)']);
         const yangoRev = parseAmount(row['REVENU | CARTE']); // On associe Carte à Yango/App
 
-        if (!prByMonth[monthKey]) {
-           prByMonth[monthKey] = {m: monthKey, ca: 0, net: 0, cumnet: 0, tresor: 0, sal: 0, opex: 0, ins: 0, rent: 0, yango: 0, cash: 0, mom: null};
+     if (!prByMonth[monthKey]) {
+           prByMonth[monthKey] = {m: monthKey, ca: 0, net: 0, rent: 0, sal: 0, yango: 0, opex: 0, ins: 0};
         }
 
-        prByMonth[monthKey].ca += revenuBrut;
-        prByMonth[monthKey].rent += loyer;
-        prByMonth[monthKey].sal += salaire;
-        prByMonth[monthKey].yango += yangoRev; // <== C'était ça qui manquait pour PROCAB !
+        // Sommation de TOUTES les colonnes présentes dans ton fichier
+        prByMonth[monthKey].ca += parseAmount(row['REVENU PROCAB BRUT (REVENU PROCAB + RESTE PROCAB)']);
+        prByMonth[monthKey].rent += parseAmount(row['LOYER']);
+        prByMonth[monthKey].sal += parseAmount(row['SALAIRE NET (BONUS + CONPENSATION 25 MAD)']);
+        prByMonth[monthKey].yango += parseAmount(row['REVENU | CARTE']);
+        prByMonth[monthKey].opex += parseAmount(row['OPEX']); // Assure-toi que le nom de colonne correspond
+        prByMonth[monthKey].ins += parseAmount(row['ASSURANCE']);
         
-        // Net mensuel = CA brut - Loyer - Salaire
-        prByMonth[monthKey].net += (revenuBrut - loyer - salaire);
+        // Calcul du net mensuel dynamique
+        prByMonth[monthKey].net = prByMonth[monthKey].ca - (prByMonth[monthKey].rent + prByMonth[monthKey].sal + prByMonth[monthKey].opex + prByMonth[monthKey].ins);
       });
 
       let prArray = Object.values(prByMonth);
@@ -1091,7 +1095,6 @@ async function doSync() {
     if(rendered.nex) renderNex();
     if(rendered.occ) renderOcc();
     if(rendered.pr) renderPr();
-    if(rendered.gr) renderGr();
 
     document.getElementById('sdot').className='sdot live';
     document.getElementById('slabel').textContent='Live · '+new Date().toLocaleTimeString();
