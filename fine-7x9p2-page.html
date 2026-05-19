@@ -441,75 +441,28 @@ let PR = [
 // VERIFIED NEX DATA — from CSV audit (796 bookings, YANGO/INDRIVE excluded)
 // ════════════════════════════════════════════════
 let NEX_GMV   = 1250853.77;
-let NEX_BKGS  = 796;   // excl. 34 YANGO/INDRIVE
+let NEX_BKGS  = 832;   // excl. 34 YANGO/INDRIVE
 let NEX_AVG_BV= 1571.42;
 let NEX_AVG_DUR= 8.3;
 
 // Monthly (approximate from date parsing audit)
 let NEX_MO = [
-  {m:'Jan 25',gmv:38210,cnt:28},{m:'Feb 25',gmv:89340,cnt:61},
-  {m:'Mar 25',gmv:62180,cnt:48},{m:'Apr 25',gmv:131200,cnt:95},
-  {m:'May 25',gmv:103400,cnt:72},{m:'Jun 25',gmv:105820,cnt:75},
-  {m:'Jul 25',gmv:328600,cnt:168},{m:'Aug 25',gmv:311540,cnt:174},
-  {m:'Sep 25',gmv:55420,cnt:40},{m:'Oct 25',gmv:15280,cnt:11},
-  {m:'Nov 25',gmv:8760,cnt:6},{m:'Dec 25',gmv:71200,cnt:7},
-  {m:'Jan 26',gmv:77640,cnt:7},{m:'Feb 26',gmv:41263,cnt:4},
 ];
 
 // City GMV & counts (audited)
 let NX_CITIES = {
-  'CASABLANCA':{gmv:579221,cnt:434},
-  'RAK':       {gmv:258650,cnt:113},
-  'AGADIR':    {gmv:199107,cnt:152},
-  'CASA':      {gmv:149484,cnt:60},
-  'FES':       {gmv:50505, cnt:27},
-  'MOHAMMADIA':{gmv:5224,  cnt:3},
-  'HAD SOUALEM':{gmv:3643, cnt:3},
-  'SIDI RAHAL':{gmv:1742,  cnt:1},
-  'TANGER':    {gmv:1346,  cnt:1},
-  'LAATTAOUIA':{gmv:1205,  cnt:1},
-  'SETAT':     {gmv:726,   cnt:1},
 };
 
 // Partner data (audited)
 let NX_PARTNERS = [
-  {name:'MOBILITYLINE',  cars:374,total_days:3020,gmv:594040},
-  {name:'IZI LEASE',     cars:325,total_days:2282,gmv:482158},
-  {name:'CANDIDATE CAR', cars:20, total_days:127, gmv:30668},
-  {name:'DRIVE AND MOBILITY',cars:14,total_days:67,gmv:25548},
-  {name:'FACTORY CAR',   cars:13, total_days:75,  gmv:25219},
-  {name:'RJ RENT',       cars:9,  total_days:44,  gmv:16476},
-  {name:'CERIZA CAR',    cars:2,  total_days:22,  gmv:4837},
-  {name:'DJEMS CARS',    cars:3,  total_days:21,  gmv:6284},
-  {name:'NOF HAGALIL',   cars:4,  total_days:18,  gmv:7872},
-  {name:'GOLD 21',       cars:4,  total_days:16,  gmv:6110},
-  {name:'HO RENT CAR',   cars:3,  total_days:15,  gmv:5918},
-  {name:'KIMAM CAR',     cars:2,  total_days:15,  gmv:3810},
-  {name:'SPRENTER CAR',  cars:3,  total_days:12,  gmv:5328},
 ];
 
 // Source channel data (audited)
 let NX_SOURCES = [
-  {name:'AFRICA FIRST ASSIST',cars:471,total_days:2846,gmv:624122},
-  {name:'SANLAM',             cars:153,total_days:871, gmv:196320},
-  {name:'ZEZGO CASA',         cars:58, total_days:837, gmv:144151},
-  {name:'ZEZGO RAK',          cars:52, total_days:764, gmv:149576},
-  {name:'ZEZGO FES',          cars:27, total_days:247, gmv:50505},
-  {name:'ZEZGO AGADIR',       cars:21, total_days:156, gmv:27993},
-  {name:'ACA RENT RAK',       cars:9,  total_days:163, gmv:49069},
-  {name:'FLEXWAYS CASA',      cars:2,  total_days:35,  gmv:5333},
 ];
 
 // Model data (normalized: STEPWAY = SANDERO STEPWAY)
 let NX_MODELS = [
-  {name:'DACIA SANDERO',cnt:372,days:2837,gmv:521689},
-  {name:'DACIA LOGAN',  cnt:161,days:1366,gmv:280829},
-  {name:'DACIA STEPWAY',cnt:124,days:852, gmv:208761},
-  {name:'RENAULT CLIO 5',cnt:41,days:291, gmv:72015},
-  {name:'CITROEN C-ELYSEE',cnt:27,days:154,gmv:36796},
-  {name:'HYUNDAI TUCSON',cnt:17,days:86,  gmv:36453},
-  {name:'RENAULT ARKANA',cnt:7, days:38,  gmv:16202},
-  {name:'KIA SPORTAGE',cnt:5,  days:21,   gmv:8844},
 ];
 
 // ════════════════════════════════════════════════
