@@ -427,13 +427,13 @@ const PROC_API = 'https://script.google.com/macros/s/AKfycbzym_FHE2wT0hdIc3pjBTI
 // VERIFIED PROCAB DATA — from Compte de Résultat
 // ════════════════════════════════════════════════
 let PR = [
-  { m: 'Nov 25', ca: 18110.50, net: -10304.38, cumnet: -10304.38, tresor: 0, rent: 13750, sal: 0, yango: 1200 },
-  { m: 'Déc 25', ca: 71942.81, net: 21074.66, cumnet: 10770.28, tresor: 10770.28, rent: 13750, sal: 1600, yango: 60 },
-  { m: 'Jan 26', ca: 77803.03, net: 8418.53, cumnet: 19188.81, tresor: 19188.81, rent: 0, sal: 27500, yango: 2070 },
-  { m: 'Fév 26', ca: 78878.18, net: -2881.32, cumnet: 16307.49, tresor: 16307.49, rent: 0, sal: 33000, yango: 0 },
-  { m: 'Mar 26', ca: 54448.66, net: -11336.34, cumnet: 4971.15, tresor: 4971.15, rent: 0, sal: 19300, yango: 0 },
-  { m: 'Avr 26', ca: 36368.29, net: -6967.21, cumnet: -1996.06, tresor: -1996.06, rent: 0, sal: 24000, yango: 0 },
-  { m: 'Mai 26', ca: 18656.42, net: -1407.58, cumnet: -3403.64, tresor: -3403.64, rent: 1000, sal: 10800, yango: 0 }
+  {m:'Nov 25', ca:18110.50, net:-7604.38, cumnet:0.00,      tresor:0.00,      sal:3514.88,  opex:8200.00, ins:3000.00, rent:17000.00, yango:0.00,      cash:20866.00, mom:null},
+  {m:'Dec 25', ca:71942.81, net:21074.66, cumnet:13470.28,  tresor:13470.28,  sal:15668.15, opex:8160.00, ins:4360.00, rent:31400.00, yango:38527.31,  cash:36455.00, mom:297.24},
+  {m:'Jan 26', ca:77803.03, net:8418.53,  cumnet:21888.81,  tresor:21888.81,  sal:17919.50, opex:12470.00,ins:8070.00, rent:47065.00, yango:33670.53,  cash:51750.50, mom:8.15},
+  {m:'Feb 26', ca:78878.18, net:-2881.32, cumnet:19007.49,  tresor:19007.49,  sal:16419.50, opex:7230.00, ins:2000.00, rent:60110.00, yango:32091.18,  cash:42787.00, mom:1.38},
+  {m:'Mar 26', ca:54448.66, net:-11336.34,cumnet:7671.15,   tresor:7671.15,   sal:17240.00, opex:1825.00, ins:0,       rent:46720.00, yango:11820.16,  cash:37328.50, mom:-30.97},
+  {m:'Apr 26', ca:36368.29, net:-6967.21, cumnet:703.94,    tresor:703.94,    sal:13835.50, opex:200.00,  ins:0,       rent:29300.00, yango:1881.29,   cash:32487.00, mom:-33.21},
+  {m:'May 26', ca:18056.42, net:10752.42, cumnet:-133.64,  tresor:676.36,    sal:7304.00,  opex:0,       ins:0,       rent:12120,        yango:3724.42,   cash:12332.00, mom:-50.35},
 ];
 let currentCumul = 0;
 for (let i = 0; i < PR.length; i++) {
