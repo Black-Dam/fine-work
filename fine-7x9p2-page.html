@@ -369,13 +369,15 @@ tr:hover td{background:var(--bg2);color:var(--text)}
 
   <div class="pl-row" id="pl-months"></div>
 
-  <div class="cgrid">
+ <div class="cgrid">
     <div class="cc"><div class="ct">Revenue vs Total Costs (MAD)</div><div class="leg" id="l-pr1"></div><div style="position:relative;height:205px"><canvas id="c-pr1"></canvas></div></div>
-    <div class="cc"><div class="ct">Revenue by Platform (MAD)</div><div class="leg" id="l-pr2"></div><div style="position:relative;height:205px"><canvas id="c-pr2"></canvas></div></div>
+    <div class="cc"><div class="ct">Trésorerie vs Accounting P&L (MAD)</div><div class="leg" id="l-prX"></div><div style="position:relative;height:205px"><canvas id="c-prX"></canvas></div></div>
   </div>
-  <div class="cgrid w1">
+  <div class="cgrid">
     <div class="cc"><div class="ct">Cost Structure by Category (MAD)</div><div class="leg" id="l-pr3"></div><div style="position:relative;height:185px"><canvas id="c-pr3"></canvas></div></div>
+    <div class="cc"><div class="ct">Revenue by Platform (MAD)</div><div class="leg" id="l-pr2"></div><div style="position:relative;height:185px"><canvas id="c-pr2"></canvas></div></div>
   </div>
+  
   <div class="cc">
     <div class="ct">Monthly P&L Detail</div>
     <div class="tw"><table id="t-pr"></table></div>
@@ -433,6 +435,26 @@ let PR = [
   {m:'Apr 26', ca:36368.29, net:-6967.21, cumnet:703.94,    tresor:703.94,    sal:13835.50, opex:200.00,  ins:0,       rent:29300.00, yango:1881.29,   cash:32487.00, mom:-33.21},
   {m:'May 26', ca:18056.42, net:10752.42, cumnet:-133.64,  tresor:676.36,    sal:7304.00,  opex:0,       ins:0,       rent:12120,        yango:3724.42,   cash:12332.00, mom:-50.35},
 ];
+let currentCumul = 0;
+for (let i = 0; i < PR.length; i++) {
+  // 1. Recalculate Net Mensuel
+  PR[i].net = PR[i].ca - (PR[i].rent + PR[i].sal + PR[i].opex + PR[i].ins);
+  
+  // 2. Recalculate Net Cumulé & Trésorerie
+  currentCumul += PR[i].net;
+  PR[i].cumnet = currentCumul;
+  
+  // Note: If you want Trésorerie to equal cumnet strictly, uncomment the next line:
+  // PR[i].tresor = currentCumul; 
+  
+  // 3. Recalculate MoM %
+  if (i > 0 && PR[i-1].ca > 0) {
+    PR[i].mom = +(((PR[i].ca - PR[i-1].ca) / PR[i-1].ca) * 100).toFixed(2);
+  } else {
+    PR[i].mom = null;
+  }
+}
+// --- END AUTO-RECALCULATE ---
 // Note: Trésorerie (cash in hand) = 676.36 MAD at May 26
 // Net P&L Cumulé (accounting) = 11,456.36 MAD
 // EBE = 676.36 MAD
@@ -516,9 +538,9 @@ let NX_MODELS = [
 // COMPUTED
 // ════════════════════════════════════════════════
 let PR_CA_TOTAL = PR.reduce((s,r)=>s+r.ca,0);
-let PR_NET_FINAL_TRESOR = (-133.64);
-let PR_NET_CUMUL = (-133.64);
-let PR_PEAK = PR.reduce((a,b)=>a.ca>b.ca?a:b);
+let PR_NET_FINAL_TRESOR = PR.length > 0 ? PR[PR.length - 1].tresor : 0;
+let PR_NET_CUMUL = PR.length > 0 ? PR[PR.length - 1].cumnet : 0;
+let PR_PEAK = PR.length > 0 ? PR.reduce((a,b)=>a.ca>b.ca?a:b) : {ca:0, m:'N/A'};
 let PR_YANGO_TOTAL = PR.reduce((s,r)=>s+r.yango,0);
 let PR_RENT_TOTAL = PR.reduce((s,r)=>s+r.rent,0);
 let PR_SAL_TOTAL = PR.reduce((s,r)=>s+r.sal,0);
@@ -751,6 +773,13 @@ function renderPr(){
     </div>`).join('');
 
   let prM=PR.map(r=>r.m);
+  // NEW GRAPH LOGIC
+  mkLine('c-prX',prM,[
+    {label:'P&L',data:PR.map(r=>r.cumnet),borderColor:'#059669',backgroundColor:'rgba(5,150,105,.06)',fill:true,tension:.3,pointRadius:4,pointBackgroundColor:'#059669',pointBorderColor:'#fff',pointBorderWidth:2},
+    {label:'Cash',data:PR.map(r=>r.tresor),borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,.04)',fill:true,tension:.3,pointRadius:4,pointBackgroundColor:'#dc2626',pointBorderColor:'#fff',pointBorderWidth:2},
+  ],{plugins:{legend:{display:false},tooltip:{...TTip,callbacks:{label:cb=>` ${cb.dataset.label}: MAD ${fmtN(cb.raw)}`}}}});
+  leg('l-prX',[{c:'#059669',l:'Accounting P&L (cumulé)'},{c:'#dc2626',l:'Trésorerie (cash in hand)'}]);
+  
   mkBar('c-pr1',prM,[
     {label:'Revenue',data:PR.map(r=>r.ca),backgroundColor:'rgba(37,99,235,.65)',stack:'r'},
     {label:'Costs',data:PR.map(r=>-(r.sal+r.opex+r.ins+r.rent)),backgroundColor:'rgba(220,38,38,.55)',stack:'c'},
@@ -771,7 +800,7 @@ function renderPr(){
   ],{plugins:{tooltip:{...TTip,callbacks:{label:cb=>` ${cb.dataset.label}: MAD ${fmtN(cb.raw)}`}}}});
   leg('l-pr3',[{c:'#d97706',l:'Salaires'},{c:'#dc2626',l:'Loyer'},{c:'#7c3aed',l:'OPEX'},{c:'#0284c7',l:'Assurance'}]);
 
-  document.getElementById('t-pr').innerHTML=
+document.getElementById('t-pr').innerHTML=
     '<thead><tr><th>Month</th><th>CA (MAD)</th><th>Yango</th><th>Espèces</th><th>Loyer</th><th>Salaires</th><th>OPEX</th><th>Net Mensuel</th><th>Net Cumulé</th><th>Trésorerie</th><th>MoM %</th></tr></thead><tbody>'+
     PR.map(r=>`<tr>
       <td style="font-weight:600">${r.m}</td>
@@ -781,8 +810,8 @@ function renderPr(){
       <td style="color:${r.rent>40000?'#dc2626':r.rent>0?'#d97706':'var(--text2)'}">MAD ${fmtN(r.rent)}</td>
       <td>MAD ${fmtN(r.sal)}</td>
       <td>MAD ${fmtN(r.opex)}</td>
-      <td style="font-weight:600;color:${r.net>=0?'var(--green)':'var(--red)'}"> ${r.net>=0?'+':''}MAD ${fmtN(Math.abs(r.net))}</td>
-      <td style="color:${r.cumnet>0?'var(--green)':'var(--text3)'}">MAD +${fmtN(r.cumnet)}</td>
+      <td style="font-weight:600;color:${r.net>=0?'var(--green)':'var(--red)'}"> ${r.net>=0?'+':'-'}MAD ${fmtN(Math.abs(r.net))}</td>
+      <td style="color:${r.cumnet>0?'var(--green)':'var(--text3)'}">${r.cumnet>=0?'+':'-'}MAD ${fmtN(Math.abs(r.cumnet))}</td>
       <td style="font-weight:600;color:${r.tresor<1000?'var(--red)':r.tresor<5000?'var(--amber)':'var(--green)'}">MAD ${fmtN(r.tresor)}</td>
       <td>${r.mom===null?'—':`<span class="pill ${r.mom>=0?'pu':'pd'}">${r.mom>=0?'+':''}${r.mom}%</span>`}</td>
     </tr>`).join('')+'</tbody>';
