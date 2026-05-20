@@ -243,7 +243,7 @@ tr:hover td{background:var(--bg2);color:var(--text)}
       <div class="rm-year">2026 Objectives</div>
       <div class="rm-title">Foundation & Scale</div>
       <div class="rm-bar"><div class="rm-fill" style="width:22%;background:var(--amber)"></div></div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Progress: 832 / 4,000 cars deployed · 22%</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Progress: 832 / 4,000 cars deployed · 21%</div>
       <div class="rm-item">
         <div class="rm-dot rm-dot-prog">→</div>
         <div>
@@ -480,8 +480,8 @@ let NEX_MO = [
 
 // City GMV & counts (audited)
 let NX_CITIES = {
-  'CASABLANCA':{gmv:579221,cnt:434},
-  'RAK':       {gmv:258650,cnt:113},
+  'CASABLANCA':{gmv:579221,cnt:531},
+  'MARRAKECH':{gmv:258650,cnt:113},
   'AGADIR':    {gmv:199107,cnt:152},
   'CASA':      {gmv:149484,cnt:60},
   'FES':       {gmv:50505, cnt:27},
@@ -497,6 +497,7 @@ let NX_CITIES = {
 let NX_PARTNERS = [
   {name:'MOBILITYLINE',  cars:374,total_days:3020,gmv:594040},
   {name:'IZI LEASE',     cars:325,total_days:2282,gmv:482158},
+  {name:'MOBILITY PRO',  cars:34,total_days:1134,gmv:218250},
   {name:'CANDIDATE CAR', cars:20, total_days:127, gmv:30668},
   {name:'DRIVE AND MOBILITY',cars:14,total_days:67,gmv:25548},
   {name:'FACTORY CAR',   cars:13, total_days:75,  gmv:25219},
@@ -519,14 +520,15 @@ let NX_SOURCES = [
   {name:'ZEZGO FES',          cars:27, total_days:247, gmv:50505},
   {name:'ZEZGO AGADIR',       cars:21, total_days:156, gmv:27993},
   {name:'ACA RENT RAK',       cars:9,  total_days:163, gmv:49069},
-  {name:'FLEXWAYS CASA',      cars:2,  total_days:35,  gmv:5333},
+  {name:'FLEXWAYS CASA',      cars:3,  total_days:35,  gmv:5333},
+  {name:'YANGO/INDRIVE',      cars:34,  total_days:1134,  gmv:218250},
 ];
 
 // Model data (normalized: STEPWAY = SANDERO STEPWAY)
 let NX_MODELS = [
-  {name:'DACIA SANDERO',cnt:372,days:2837,gmv:521689},
+  {name:'DACIA SANDERO',cnt:331,days:3844,gmv:714748},
   {name:'DACIA LOGAN',  cnt:161,days:1366,gmv:280829},
-  {name:'DACIA STEPWAY',cnt:124,days:852, gmv:208761},
+  {name:'DACIA STEPWAY',cnt:125,days:852, gmv:208761},
   {name:'RENAULT CLIO 5',cnt:41,days:291, gmv:72015},
   {name:'CITROEN C-ELYSEE',cnt:27,days:154,gmv:36796},
   {name:'HYUNDAI TUCSON',cnt:17,days:86,  gmv:36453},
