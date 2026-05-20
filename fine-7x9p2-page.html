@@ -243,7 +243,7 @@ tr:hover td{background:var(--bg2);color:var(--text)}
       <div class="rm-year">2026 Objectives</div>
       <div class="rm-title">Foundation & Scale</div>
       <div class="rm-bar"><div class="rm-fill" style="width:22%;background:var(--amber)"></div></div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Progress: 796 / 4,000 cars deployed · 22%</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Progress: 832 / 4,000 cars deployed · 22%</div>
       <div class="rm-item">
         <div class="rm-dot rm-dot-prog">→</div>
         <div>
@@ -255,7 +255,7 @@ tr:hover td{background:var(--bg2);color:var(--text)}
         <div class="rm-dot rm-dot-prog">→</div>
         <div>
           <div class="rm-item-text"><strong>4,000 Cars Fleet Integration</strong><br>Deploy 4,000 vehicles across 3 corporate clients. B2B enterprise focus with long-term contracts.</div>
-          <div class="rm-item-val" style="color:var(--amber)">Target: Q4 2026 · Currently: 796 cars deployed</div>
+          <div class="rm-item-val" style="color:var(--amber)">Target: Q4 2026 · Currently: 832 cars deployed</div>
         </div>
       </div>
       <div class="rm-item">
@@ -278,7 +278,7 @@ tr:hover td{background:var(--bg2);color:var(--text)}
       <div class="rm-year">2027 Objectives</div>
       <div class="rm-title">National Dominance</div>
       <div class="rm-bar"><div class="rm-fill" style="width:8%;background:var(--blue)"></div></div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Current: 796 cars · Target: 10,000 · 8% of way there</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Current: 832 cars · Target: 10,000 · 8% of way there</div>
       <div class="rm-item">
         <div class="rm-dot rm-dot-plan">○</div>
         <div>
@@ -319,7 +319,7 @@ tr:hover td{background:var(--bg2);color:var(--text)}
 <!-- ════════════ NEX ════════════ -->
 <div id="s-nex" class="sec">
   <div class="sh">
-    <div><div class="sh-t">NEX — Car Rental Distribution</div><div class="sh-s">796 bookings · MAD 1,250,854 GMV · Jan 2025 – Feb 2026 · YANGO/INDRIVE excluded (34 bookings)</div></div>
+    <div><div class="sh-t">NEX — Car Rental Distribution</div><div class="sh-s">800 bookings · MAD 1,250,854 GMV · Jan 2025 – Feb 2026 · YANGO/INDRIVE excluded (34 bookings)</div></div>
   </div>
   <div class="kgrid" id="kg-nex"></div>
   <div class="cgrid">
@@ -588,7 +588,7 @@ function kpi(id,cards){
 // ════════════════════════════════════════════════
 function renderOv(){
   kpi('kg-ov',[
-    {l:'NEX GMV (796 bookings)',v:'MAD '+fmt(NEX_GMV),s:'YANGO/INDRIVE excluded',t:'blue'},
+    {l:'NEX GMV (800 bookings)',v:'MAD '+fmt(NEX_GMV),s:'YANGO/INDRIVE excluded',t:'blue'},
     {l:'PROCAB Revenue',v:'MAD '+fmt(PR_CA_TOTAL),s:'7 months · Nov 25 – May 26',t:'amber'},
     {l:'Combined GMV',v:'MAD '+fmt(COMBINED_GMV),s:'Both units consolidated',t:'blue'},
     {l:'Trésorerie (Cash)',v:'MAD '+fmtN(PR_NET_FINAL_TRESOR),s:'PROCAB cash in hand',t:'red',sc:'kd'},
@@ -625,7 +625,7 @@ function renderRd(){
     {l:'Partner Onboarding Target',v:'250 partners',s:'Paying for subscriptions · 2026',t:'green'},
   ]);
   let labels=['Now','Q3 26','Q4 26','Q1 27','Q2 27','Q3 27','Q4 27'];
-  let data=[796,1500,4000,10000,10000,10000,10000];
+  let data=[800,1500,4000,10000,10000,10000,10000];
   mkLine('c-rd1',labels,[{data,borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.06)',fill:true,tension:.3,pointRadius:5,pointBackgroundColor:['#dc2626','#d97706','#d97706','#059669','#059669','#059669','#059669'],pointBorderColor:'#fff',pointBorderWidth:2}],
     {plugins:{tooltip:{...TTip,callbacks:{label:cb=>` ${fmtN(cb.raw)} cars`}}}});
 }
@@ -636,7 +636,7 @@ function renderRd(){
 function renderNex(){
   let topCityKey = Object.keys(NX_CITIES).sort((a,b)=>NX_CITIES[b].gmv-NX_CITIES[a].gmv)[0];
   kpi('kg-nex',[
-    {l:'Total GMV (excl. YANGO)',v:'MAD '+fmt(NEX_GMV),s:'796 validated bookings',t:'blue'},
+    {l:'Total GMV (excl. YANGO)',v:'MAD '+fmt(NEX_GMV),s:'832 validated bookings',t:'blue'},
     {l:'Avg Booking Value',v:'MAD '+fmtN(Math.round(NEX_AVG_BV)),s:'Per booking',t:'blue'},
     {l:'Avg Duration',v:NEX_AVG_DUR+' days',s:'Per rental',t:'blue'},
     {l:'Top City',v:topCityKey,s:'MAD '+fmt(NX_CITIES[topCityKey].gmv)+' · '+NX_CITIES[topCityKey].cnt+' bookings',t:'green',sc:'ku'},
@@ -955,7 +955,7 @@ function renderInv(){
 let TABS={
   ov:{title:'Executive Overview',sub:'Combined · Nov 2025 – May 2026',fn:renderOv},
   rd:{title:'Roadmap 2026 – 2027',sub:'Fleet targets · Growth objectives · Strategic milestones',fn:renderRd},
-  nex:{title:'NEX — Car Rental Distribution',sub:'796 bookings · MAD 1,250,854 GMV · YANGO/INDRIVE excluded',fn:renderNex},
+  nex:{title:'NEX — Car Rental Distribution',sub:'800 bookings · MAD 1,250,854 GMV · YANGO/INDRIVE excluded',fn:renderNex},
   occ:{title:'Fleet Occupancy Analysis',sub:'Days generated · Occupancy rate · Financial value per car per partner',fn:renderOcc},
   pr:{title:'PROCAB — VTC Operations',sub:'Compte de Résultat Analytique · Nov 2025 – May 2026',fn:renderPr},
   gr:{title:'Growth & Trends',sub:'NEX seasonal · PROCAB MoM · Trésorerie trajectory',fn:renderGr},
